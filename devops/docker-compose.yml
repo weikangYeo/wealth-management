@@ -1,0 +1,17 @@
+
+version: "3.8"
+# Collection of services for local development, Dev could start up individual service respectively if needed.
+name: wealth-management-stack
+services:
+  wealth-management-rds:
+    container_name: wealth-mgmt-db
+    image: mysql:9.3.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=user
+    ports:
+      - 3307:3306
+    volumes:
+      - ./database/init:/docker-entrypoint-initdb.d
+    command: mysqld --lower_case_table_names=1  --character_set_server=utf8 --explicit_defaults_for_timestamp

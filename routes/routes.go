@@ -1,7 +1,12 @@
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	"database/sql"
 
-func SetupRoutes(r *gin.Engine) {
+	"github.com/gin-gonic/gin"
+)
+
+func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	registerPingRoute(r)
+	registerGoldRoutes(r, db)
 }
