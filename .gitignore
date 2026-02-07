@@ -1,2 +1,31 @@
+# Root
 /.idea/
+
+# BE
 backend/.env
+
+# FE
+## Compiled output
+frontend/dist
+frontend/tmp
+frontend/out-tsc
+frontend/bazel-out
+
+## Node
+frontend/node_modules
+frontend/npm-debug.log
+frontend/yarn-error.log
+
+## Miscellaneous
+frontend/.angular/cache
+frontend/.sass-cache/
+frontend/connect.lock
+frontend//coverage
+frontend/libpeerconnection.log
+frontend/testem.log
+frontend/typings
+frontend/__screenshots__/
+
+## System files
+.DS_Store
+Thumbs.db
