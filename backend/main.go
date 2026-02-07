@@ -50,6 +50,9 @@ func initDb() {
 	cfg.Net = "tcp"
 	cfg.Addr = "localhost:3307"
 	cfg.DBName = "wealth_management"
+	cfg.Params = map[string]string{}
+	// so DB time (uint) value can be parsed to golang time
+	cfg.Params["parseTime"] = "true"
 
 	var err error
 	db, err = sql.Open("mysql", cfg.FormatDSN())
