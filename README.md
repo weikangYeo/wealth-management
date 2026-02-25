@@ -16,9 +16,10 @@
         - [ ] Cash
 - [ ] CRUD
     - [ ] Import/Export
-        - [ ] Upsert
+        - [ ] Upsert Gold Txn
     - [ ] Item by Item CRUD
 - [ ] Watch list
+- [ ] Revamp UI 
 - [ ] "Fun" Part - Web Scrapper
     - [ ] Funds Info & Price
     - [ ] Stock info & Price

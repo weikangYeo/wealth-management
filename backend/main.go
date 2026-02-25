@@ -70,7 +70,7 @@ func initDb() {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://devops/database/migrations",
+		"file://../devops/database/migrations",
 		"mysql",
 		driver)
 	if err != nil {
