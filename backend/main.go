@@ -24,6 +24,9 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	// set logger properties
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	initDb()
 	if db != nil {
 		defer db.Close()

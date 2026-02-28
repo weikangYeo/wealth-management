@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"log"
 	"wealth-management/domains"
 )
 
@@ -39,4 +40,42 @@ func (repo *GoldRepository) GetAll() ([]domains.GoldTxn, error) {
 
 	return goldTxns, nil
 
+}
+
+func (repo *GoldRepository) ReplaceAllByEntrySource(entrySource string, goldTxns []domains.GoldTxn) error {
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
+	// when there is any error occur and return later, rollback would always call
+	// in the event of `tx.commit()`, it been flushed and nothing else would be rolled back (no-opt)
+	defer tx.Rollback()
+	_, err = tx.Exec("DELETE FROM gold_txn WHERE entry_source=?", entrySource)
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("INSERT INTO gold_txn VALUES (?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	for _, goldTxn := range goldTxns {
+		log.Printf("Debug - GoldTxn %#v\n", goldTxn)
+		log.Printf("Debug - goldTxn.Gram.String() %s\n", goldTxn.Gram.String())
+		log.Printf("Debug - goldTxn.UnitPrice.String() %s\n", goldTxn.UnitPrice.String())
+		log.Printf("Debug - goldTxn.TotalPrice.String() %s\n", goldTxn.TotalPrice.String())
+		_, err = stmt.Exec(
+			goldTxn.ID,
+			goldTxn.Bank,
+			goldTxn.TxnDate,
+			goldTxn.Gram.String(),
+			goldTxn.UnitPrice.String(),
+			goldTxn.TotalPrice.String(),
+			goldTxn.TxnType,
+			goldTxn.EntrySource)
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }

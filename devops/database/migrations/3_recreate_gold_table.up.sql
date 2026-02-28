@@ -1,6 +1,6 @@
 CREATE TABLE gold_txn
 (
-    id           varchar(32) primary key not null,
+    id           varchar(36) primary key not null,
     bank         varchar(10),
     txn_date     date,
     gram         decimal(10, 2),

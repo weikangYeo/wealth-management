@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/csv"
-	"io"
 	"log"
 	"net/http"
 	"regexp"
@@ -12,19 +11,20 @@ import (
 
 	"github.com/cockroachdb/apd/v3"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type GoldHandler struct {
-	fundRepo repository.GoldRepository
+	goldRepo repository.GoldRepository
 }
 
-// NewGoldHandler it might be fine without but it is a contructor so fundRepo stay private and unmodified when created.
+// NewGoldHandler it might be fine without but it is a contructor so goldRepo stay private and unmodified when created.
 func NewGoldHandler(fundRepo repository.GoldRepository) GoldHandler {
-	return GoldHandler{fundRepo: fundRepo}
+	return GoldHandler{goldRepo: fundRepo}
 }
 
 func (handler *GoldHandler) GetAllGoldsTxn(context *gin.Context) {
-	funds, err := handler.fundRepo.GetAll()
+	funds, err := handler.goldRepo.GetAll()
 	if err != nil {
 		log.Printf("Error getting funds: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -46,17 +46,98 @@ func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
 	if err != nil {
 		log.Printf("Error opening file: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	defer file.Close()
 	csvReader := csv.NewReader(file)
 
 	// recognize header position
 	// at the moment support: "Investment Type,Bank,Investment Date	Selling Date	Gold (Gram)	Purchase Unit Price	Selling Unit Price	Gainc/ Loss	Status	Remarks"
-	headerRow, err := csvReader.Read()
+	indexByHeaderMap, err := identifyHeader(csvReader)
 	if err != nil {
-		log.Printf("Error reading header: %v", err)
+		log.Printf("Error reading file header: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// read remaining rows
+	rows, err := csvReader.ReadAll()
+	if err != nil {
+		log.Printf("Error reading file content: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	goldTxns, err := parseGoldTxns(rows, indexByHeaderMap)
+	if err != nil {
+		log.Printf("Error parsing content: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = handler.goldRepo.ReplaceAllByEntrySource("BulkImport", goldTxns)
+	if err != nil {
+		log.Printf("Error Replacing By Entry Source: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"message": "Gold file import successful"})
+}
+
+func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]domains.GoldTxn, error) {
+	var goldTxns []domains.GoldTxn
+
+	for _, record := range rows {
+		dateStr := record[indexByHeaderMap["TxnDate"]]
+		if dateStr == "" {
+			log.Println("No TxnDate, consider as dirty data, skipping this row")
+			continue
+		}
+		// golang date format design is just nut, the layout MUST follow their references example value
+		txnDate, err := time.Parse("January 2, 2006", dateStr)
+		if err != nil {
+			return nil, err
+		}
+
+		txnType := "BUY"
+		if record[indexByHeaderMap["TxnType"]] == "Sold Out" {
+			txnType = "SOLD"
+		}
+
+		gram, err := toDecimal(record[indexByHeaderMap["Gram"]])
+		if err != nil {
+			return nil, err
+		}
+		unitPrice, err := toDecimal(record[indexByHeaderMap["UnitPrice"]])
+		if err != nil {
+			return nil, err
+		}
+
+		ctx := apd.BaseContext.WithPrecision(12)
+		totalPrice := new(apd.Decimal)
+		_, err = ctx.Mul(totalPrice, gram, unitPrice)
+		if err != nil {
+			return nil, err
+		}
+
+		goldTxns = append(goldTxns, domains.GoldTxn{
+			ID:          uuid.New().String(),
+			Bank:        record[indexByHeaderMap["Bank"]],
+			TxnDate:     txnDate,
+			Gram:        *gram,
+			UnitPrice:   *unitPrice,
+			TotalPrice:  *totalPrice,
+			TxnType:     txnType,
+			EntrySource: "BulkImport",
+		})
+	}
+	return goldTxns, nil
+}
+
+func identifyHeader(csvReader *csv.Reader) (map[string]int, error) {
+	headerRow, err := csvReader.Read()
+	if err != nil {
+		return nil, err
 	}
 	indexByHeaderMap := make(map[string]int)
 	for index, header := range headerRow {
@@ -76,83 +157,14 @@ func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
 			indexByHeaderMap[key] = index
 		}
 	}
-
-	var goldTxns []domains.GoldTxn
-	for {
-		record, err := csvReader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Printf("Error reading csv: %v", err)
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		// todo do the mapping logic here base on the header recognize logic
-		// golang date format design is just nut, the layout MUST follow their references
-		dateStr := record[indexByHeaderMap["TxnDate"]]
-		if dateStr == "" {
-			log.Println("No TxnDate, Dirty Data found, skipping this row")
-			continue
-		}
-		txnDate, err := time.Parse("January 2, 2006", dateStr)
-		if err != nil {
-			log.Printf("Error parsing txnDate: %v, source: %s", err, dateStr)
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		txnType := "BUY"
-		if record[indexByHeaderMap["TxnType"]] == "Sold Out" {
-			txnType = "SOLD"
-		}
-
-		gram, _, err := apd.NewFromString(toNumericString(record[indexByHeaderMap["Gram"]]))
-		if err != nil {
-			log.Printf("Error parsing gold txn: %v, source string %s", err, record[indexByHeaderMap["Gram"]])
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		unitPrice, _, err := apd.NewFromString(toNumericString(record[indexByHeaderMap["UnitPrice"]]))
-		if err != nil {
-			log.Printf("Error parsing gold unit price: %v", err)
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		ctx := apd.Context{
-			Precision: 12,
-		}
-
-		totalPrice := new(apd.Decimal)
-		_, err = ctx.Mul(totalPrice, gram, unitPrice)
-		if err != nil {
-			log.Printf("Error creating condition: %v", err)
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		log.Printf("Txn Date %s\n", record[indexByHeaderMap["TxnDate"]])
-
-		goldTxns = append(goldTxns, domains.GoldTxn{
-			Bank:        record[indexByHeaderMap["Bank"]],
-			TxnDate:     txnDate,
-			Gram:        *gram,
-			UnitPrice:   *unitPrice,
-			TotalPrice:  *totalPrice,
-			TxnType:     txnType,
-			EntrySource: "BulkImport",
-		})
-	}
-
-	log.Printf("Debug: %v", goldTxns)
-	// todo: remove all rows where EntrySource: "BulkImport" and insert back in
-
-	context.JSON(http.StatusOK, gin.H{"message": "Gold file import successful"})
+	return indexByHeaderMap, nil
 }
 
-func toNumericString(str string) string {
-	return regexp.MustCompile("[^0-9.]").ReplaceAllString(str, "")
-
+func toDecimal(str string) (*apd.Decimal, error) {
+	numericStr := regexp.MustCompile("[^0-9.]").ReplaceAllString(str, "")
+	numeric, _, err := apd.NewFromString(numericStr)
+	if err != nil {
+		return nil, err
+	}
+	return numeric, nil
 }

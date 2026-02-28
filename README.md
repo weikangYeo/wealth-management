@@ -31,6 +31,11 @@
 - [ ] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
 
 ## Note for future self
+- Current/Next item to work with
+  - Gold Management UI 
+    - list to show all current txn 
+      - current total cost, grams, market value (placeholder) 
+    - UI of bulk import 
 
 ### File structure for Gin
 
