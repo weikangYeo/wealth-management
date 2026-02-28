@@ -1,0 +1,1 @@
+DROP INDEX idx_gold_txn_entry_source;
