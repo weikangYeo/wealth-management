@@ -60,7 +60,7 @@ Directory
 
 ## Start project
 - run `docker-compose up` in `/devops` folder 
-- create a file call `.env` in root directory, which following content
+- create a file call `.env` in `backend` directory, which following content
 ```
 DBUSER=<replace with your username>
 DBPASS=<replace with your password>

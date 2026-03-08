@@ -6,6 +6,7 @@ import (
 	"os"
 	"wealth-management/routes"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	mysqlDriver "github.com/go-sql-driver/mysql"
@@ -34,6 +35,10 @@ func main() {
 
 	// Create a Gin router with default middleware (logger and recovery)
 	r := gin.Default()
+	//r.Use(cors.Default()) // All origins allowed by default
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:4200"}
+	r.Use(cors.New(config))
 
 	// Point to main route
 	routes.SetupRoutes(r, db)

@@ -24,16 +24,14 @@ func NewGoldHandler(fundRepo repository.GoldRepository) GoldHandler {
 }
 
 func (handler *GoldHandler) GetAllGoldsTxn(context *gin.Context) {
-	funds, err := handler.goldRepo.GetAll()
+	golds, err := handler.goldRepo.GetAll()
 	if err != nil {
-		log.Printf("Error getting funds: %v", err)
+		log.Printf("Error getting golds: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-	context.JSON(http.StatusOK, gin.H{"golds": funds})
+	context.JSON(http.StatusOK, gin.H{"golds": golds})
 }
 
-// todo refactor after function test ok
-// todo remove all entry that from "file" before insert
 // PostBulkImportGolds expect client send files with multipart/form-data
 func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
 	fileHeader, err := context.FormFile("file")

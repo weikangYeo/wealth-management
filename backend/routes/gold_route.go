@@ -13,7 +13,7 @@ func registerGoldRoutes(r *gin.Engine, db *sql.DB) {
 	goldHandler := handlers.NewGoldHandler(goldRepo)
 	goldRoutes := r.Group("/golds")
 	{
-		goldRoutes.GET("/", goldHandler.GetAllGoldsTxn)
+		goldRoutes.GET("", goldHandler.GetAllGoldsTxn)
 		goldRoutes.POST("/bulk-imports", goldHandler.PostBulkImportGolds)
 	}
 }

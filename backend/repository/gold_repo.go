@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"log"
 	"wealth-management/domains"
 )
 
@@ -28,7 +27,7 @@ func (repo *GoldRepository) GetAll() ([]domains.GoldTxn, error) {
 	goldTxns := make([]domains.GoldTxn, 0)
 	for rows.Next() {
 		var gold domains.GoldTxn
-		if err := rows.Scan(&gold.ID, &gold.Bank, &gold.TxnDate, &gold.Gram, &gold.UnitPrice, &gold.TotalPrice, &gold.TxnType); err != nil {
+		if err := rows.Scan(&gold.ID, &gold.Bank, &gold.TxnDate, &gold.Gram, &gold.UnitPrice, &gold.TotalPrice, &gold.TxnType, &gold.EntrySource); err != nil {
 			return nil, err
 		}
 		goldTxns = append(goldTxns, gold)
@@ -60,10 +59,6 @@ func (repo *GoldRepository) ReplaceAllByEntrySource(entrySource string, goldTxns
 	}
 	defer stmt.Close()
 	for _, goldTxn := range goldTxns {
-		log.Printf("Debug - GoldTxn %#v\n", goldTxn)
-		log.Printf("Debug - goldTxn.Gram.String() %s\n", goldTxn.Gram.String())
-		log.Printf("Debug - goldTxn.UnitPrice.String() %s\n", goldTxn.UnitPrice.String())
-		log.Printf("Debug - goldTxn.TotalPrice.String() %s\n", goldTxn.TotalPrice.String())
 		_, err = stmt.Exec(
 			goldTxn.ID,
 			goldTxn.Bank,
