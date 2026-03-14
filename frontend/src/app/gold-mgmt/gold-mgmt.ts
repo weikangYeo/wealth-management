@@ -1,18 +1,35 @@
-import {Component, computed, inject, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
 import {GoldTxn} from './gold.model';
 import {GoldService} from './gold.service';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {CommonModule} from '@angular/common';
 
 @Component({
   selector: 'app-gold-mgmt',
   standalone: true,
-  imports: [],
+  imports: [
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatButtonModule,
+    CommonModule,
+    MatSnackBarModule
+  ],
+  changeDetection: ChangeDetectionStrategy.Default, // or OnPush
   templateUrl: "./gold-mgmt-page.html",
   styles: [],
 })
 export class GoldMgmt {
 
+  private snackBar = inject(MatSnackBar);
   private goldService = inject(GoldService);
   protected goldTransactions = signal<GoldTxn[]>([]);
+  selectedFile: File | null = null;
+  fileName: string = '';
 
   // Computed signal are read-only signals that derive their value from other signals.
   // it is lazy loaded and only calculated when upstream/depended signal done
@@ -39,4 +56,37 @@ export class GoldMgmt {
     });
   }
 
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      this.fileName = this.selectedFile.name;
+    }
+  }
+
+
+  onBulkImport() {
+    if (!this.selectedFile) {
+      alert('Please select a file');
+      return;
+    }
+    this.goldService.bulkImportGolds(this.selectedFile).subscribe({
+      next: (response) => {
+        this.goldService.getAllTransactions().subscribe(data => {
+          this.goldTransactions.set(data);
+          this.snackBar.open('Bulk Import Successful', 'OK', {
+            duration: 3000,
+            verticalPosition: 'top'
+          });
+        });
+      },
+      error: (error) => {
+        console.error('Import failed:', error);
+        // this.snackBar.open('Bulk Import Failed: ' + (error.error?.error || error.message), 'OK', {
+        //   duration: 3000,
+        //   verticalPosition: 'top'
+        // });
+      }
+    });
+  }
 }

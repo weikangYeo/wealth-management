@@ -16,13 +16,13 @@
     <!-- Avg Purchase Price -->
     <div class="flex flex-col text-center flex-1">
       <span class="text-[13px] text-gray-500 font-semibold mb-2">Avg Purchase Price</span>
-      <span class="text-lg font-extrabold text-black">RM {{avgPurchasePrice()}} /g</span>
+      <span class="text-lg font-extrabold text-black">RM {{ avgPurchasePrice() | number:'1.2-2'}} /g</span>
     </div>
 
     <!-- Total Purchased -->
     <div class="flex flex-col text-center flex-1">
       <span class="text-[13px] text-gray-500 font-semibold mb-2">Total Purchased</span>
-      <span class="text-lg font-extrabold text-black">RM {{ totalPurchased() }}</span>
+      <span class="text-lg font-extrabold text-black">RM {{ totalPurchased() | number:'1.2-2'}}</span>
     </div>
 
     <!-- TODO Calculate After Web Scrapper logic done, should incluse realized profit -->
@@ -65,7 +65,7 @@
           @for (txn of goldTransactions(); track txn.id) {
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4 text-xs">{{ txn.bank }}</td>
-              <td class="px-6 py-4 text-xs">{{ txn.txnDate }}</td>
+              <td class="px-6 py-4 text-xs">{{ txn.txnDate | date }}</td>
               <td class="px-6 py-4 text-xs text-right">{{ txn.gram }}</td>
               <td class="px-6 py-4 text-xs text-right">{{ txn.unitPrice }}</td>
               <td class="px-6 py-4 text-xs text-right">{{ txn.totalPrice }}</td>
@@ -86,6 +86,43 @@
 
     </div>
 
+  </div>
+
+  <div class="w-full max-w-250 py-8 ">
+    <div class="flex flex-col text-center flex-1">
+      <mat-form-field appearance="outline">
+        <mat-label>Upload gold transaction file (CSV)</mat-label>
+        <input
+          matInput
+          type="text"
+          [value]="fileName || ''"
+          placeholder="Choose a file"
+          readonly
+          (click)="fileInput.click()"
+          style="cursor:pointer;"
+        />
+        <button mat-icon-button matSuffix (click)="fileInput.click()" type="button">
+          <mat-icon>attach_file</mat-icon>
+        </button>
+      </mat-form-field>
+      <input
+        #fileInput
+        id="fileInput"
+        type="file"
+        accept=".csv"
+        style="display:none;"
+        (change)="onFileSelected($event)"
+      />
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onBulkImport()"
+        [disabled]="!selectedFile"
+        class="mt-4"
+      >
+        Bulk Import
+      </button>
+    </div>
   </div>
 
 </div>

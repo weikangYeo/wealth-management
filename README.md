@@ -15,8 +15,8 @@
         - [ ] Stock
         - [ ] Cash
 - [ ] CRUD
-    - [ ] Import/Export
-        - [ ] Upsert Gold Txn
+    - [X] Import/Export
+        - [X] Upsert Gold Txn
     - [ ] Item by Item CRUD
 - [ ] Watch list
 - [ ] Revamp UI 

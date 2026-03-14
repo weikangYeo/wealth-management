@@ -13,4 +13,11 @@ export class GoldService {
       .pipe(map(res => res.golds))
   }
 
+  bulkImportGolds(file : File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{message: string}>(this.GOLD_RESOURCE_API_URL+"/bulk-imports", formData);
+
+  }
+
 }
