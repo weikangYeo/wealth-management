@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"wealth-management/routes"
+	"wealth-management/scrapper"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,15 @@ import (
 var db *sql.DB
 
 func main() {
+	//startApp()
+	testScrapper()
+}
+
+func testScrapper() {
+	scrapper.ScrapeGoldPrice()
+}
+
+func startApp() {
 	// load property to env variable
 	err := godotenv.Load()
 	if err != nil {

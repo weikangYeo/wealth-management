@@ -41,6 +41,7 @@
 
 Directory
 
+prvious, package by layers
 ```
     ├── go.mod
     ├── go.sum
@@ -56,6 +57,31 @@ Directory
         ├── stock_routes.go
         ├── fund_routes.go
         └── dashboard_routes.go
+```
+
+tobe, package by feature
+```
+backend/
+    ├── cmd/
+    │   └── server/
+    │       └── main.go             # Entry point: Wires features together
+    ├── internal/                   # Code not meant to be imported by other projects
+    │   ├── gold/                   # FEATURE: Gold Management
+    │   │   ├── handler.go          # HTTP endpoints (was gold_handler.go)
+    │   │   ├── repository.go       # DB operations (was gold_repo.go)
+    │   │   ├── model.go            # Data structures (was domains/gold.go)
+    │   │   ├── scrapper.go         # Scraping logic (was gold_price_scrapper.go)
+    │   │   └── routes.go           # Feature-specific route registration
+    │   │
+    │   ├── system/                 # FEATURE: System/Health
+    │   │   └── ping.go             # (was ping_route.go)
+    │   │
+    │   └── platform/               # SHARED TOOLS/INFRASTRUCTURE
+    │       ├── scraper/
+    │       │   └── cookies.go      # Shared scraper utils (was cookies-harvestor.go)
+    │       └── database/           # DB connection/init logic
+    ├── go.mod
+    └── go.sum
 ```
 
 ## Start project
