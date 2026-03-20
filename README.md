@@ -32,39 +32,21 @@
 
 ## Note for future self
 - Current/Next item to work with
+  - Scraper
+    - after scrape, save value to gold price table
   - Gold Management UI 
-    - list to show all current txn 
-      - current total cost, grams, market value (placeholder) 
-    - UI of bulk import 
+    - get latest gold price, calculate gold value and show "price as of yyyy-mm-dd"
 
-### File structure for Gin
+### File structure 
 
-Directory
-
-prvious, package by layers
-```
-    ├── go.mod
-    ├── go.sum
-    ├── main.go
-    ├── handlers/
-    │   ├── ping_handler.go
-    │   ├── stock_handler.go
-    │   ├── fund_handler.go
-    │   └── dashboard_handler.go
-    └── routes/
-        ├── routes.go              # The main router setup file
-        ├── ping_routes.go
-        ├── stock_routes.go
-        ├── fund_routes.go
-        └── dashboard_routes.go
-```
-
-tobe, package by feature
+this repo is using "Package by feature" way to seperate packages.
 ```
 backend/
     ├── cmd/
+    │   └── scrapper/
+    │       └── main.go             # Entry point for scrapper
     │   └── server/
-    │       └── main.go             # Entry point: Wires features together
+    │       └── main.go             # Entry point for web BE
     ├── internal/                   # Code not meant to be imported by other projects
     │   ├── gold/                   # FEATURE: Gold Management
     │   │   ├── handler.go          # HTTP endpoints (was gold_handler.go)
@@ -91,3 +73,5 @@ backend/
 DBUSER=<replace with your username>
 DBPASS=<replace with your password>
 ```
+- `go run cmd/scrapper/main.go ` to start scrapper logic
+- `go` run cmd/server/main.go` to start web app logic 

@@ -1,4 +1,4 @@
-package scrapper
+package gold
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
+// todo change back to lower case after testing
 func ScrapeGoldPrice() {
 	//html := getHtmlPage()
 	html := getTestingHtmlPage()
@@ -59,6 +60,7 @@ func ScrapeGoldPrice() {
 }
 
 func getTestingHtmlPage() string {
+	log.Println("Scraping from local testing file")
 	filename := "../resources/test-material/scrape/gold_and_silver_price.html"
 	contentBytes, err := os.ReadFile(filename)
 
@@ -72,6 +74,8 @@ func getTestingHtmlPage() string {
 
 func getHtmlPage() string {
 	targetURL := "https://www.maybank2u.com.my/maybank2u/malaysia/en/personal/rates/gold_and_silver.page"
+	log.Printf("Scraping from %s", targetURL)
+
 	// chromedp: navigate, wait for content, grab HTML
 	var html string
 

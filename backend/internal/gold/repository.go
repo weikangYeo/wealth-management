@@ -1,32 +1,31 @@
-package repository
+package gold
 
 import (
 	"database/sql"
-	"wealth-management/domains"
 )
 
-// GoldRepository skip interface design here for now since repo still small (YNGNI)
-type GoldRepository struct {
+// repository skip interface design here for now since repo still small (YNGNI)
+type repository struct {
 	// this is to hold the ref of sql connection that created during app start, to pool connections.
 	db *sql.DB
 }
 
-// NewGoldRepository use constructor so the db connection stay private and won't be modified,
+// newGoldRepository use constructor so the db connection stay private and won't be modified,
 // else has to make it as Public to create FundRepo struct
-func NewGoldRepository(db *sql.DB) GoldRepository {
-	return GoldRepository{db: db}
+func newGoldRepository(db *sql.DB) repository {
+	return repository{db: db}
 }
 
-func (repo *GoldRepository) GetAll() ([]domains.GoldTxn, error) {
+func (repo *repository) getAll() ([]Txn, error) {
 	rows, err := repo.db.Query("SELECT * FROM gold_txn")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	goldTxns := make([]domains.GoldTxn, 0)
+	goldTxns := make([]Txn, 0)
 	for rows.Next() {
-		var gold domains.GoldTxn
+		var gold Txn
 		if err := rows.Scan(&gold.ID, &gold.Bank, &gold.TxnDate, &gold.Gram, &gold.UnitPrice, &gold.TotalPrice, &gold.TxnType, &gold.EntrySource); err != nil {
 			return nil, err
 		}
@@ -41,7 +40,7 @@ func (repo *GoldRepository) GetAll() ([]domains.GoldTxn, error) {
 
 }
 
-func (repo *GoldRepository) ReplaceAllByEntrySource(entrySource string, goldTxns []domains.GoldTxn) error {
+func (repo *repository) replaceAllByEntrySource(entrySource string, goldTxns []Txn) error {
 	tx, err := repo.db.Begin()
 	if err != nil {
 		return err

@@ -2,11 +2,12 @@ package routes
 
 import (
 	"database/sql"
+	"wealth-management/internal/gold"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	registerPingRoute(r)
-	registerGoldRoutes(r, db)
+	gold.RegisterGoldRoutes(r, db)
 }

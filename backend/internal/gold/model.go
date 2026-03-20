@@ -1,4 +1,4 @@
-package domains
+package gold
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/cockroachdb/apd/v3"
 )
 
-type GoldTxn struct {
+type Txn struct {
 	ID          string      `json:"id"`
 	Bank        string      `json:"bank"`
 	TxnDate     time.Time   `json:"txnDate"`
@@ -15,4 +15,9 @@ type GoldTxn struct {
 	TotalPrice  apd.Decimal `json:"totalPrice"`
 	TxnType     string      `json:"txnType"`
 	EntrySource string      `json:"entrySource"`
+}
+
+type PriceHistory struct {
+	buyPrice  apd.Decimal
+	priceDate time.Time
 }

@@ -1,4 +1,4 @@
-package handlers
+package gold
 
 import (
 	"encoding/csv"
@@ -6,25 +6,23 @@ import (
 	"net/http"
 	"regexp"
 	"time"
-	"wealth-management/domains"
-	"wealth-management/repository"
 
 	"github.com/cockroachdb/apd/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-type GoldHandler struct {
-	goldRepo repository.GoldRepository
+type handler struct {
+	goldRepo repository
 }
 
-// NewGoldHandler it might be fine without but it is a contructor so goldRepo stay private and unmodified when created.
-func NewGoldHandler(fundRepo repository.GoldRepository) GoldHandler {
-	return GoldHandler{goldRepo: fundRepo}
+// newGoldHandler it might be fine without but it is a contructor so goldRepo stay private and unmodified when created.
+func newGoldHandler(fundRepo repository) handler {
+	return handler{goldRepo: fundRepo}
 }
 
-func (handler *GoldHandler) GetAllGoldsTxn(context *gin.Context) {
-	golds, err := handler.goldRepo.GetAll()
+func (handler *handler) getAllGoldsTxn(context *gin.Context) {
+	golds, err := handler.goldRepo.getAll()
 	if err != nil {
 		log.Printf("Error getting golds: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -32,8 +30,8 @@ func (handler *GoldHandler) GetAllGoldsTxn(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"golds": golds})
 }
 
-// PostBulkImportGolds expect client send files with multipart/form-data
-func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
+// postBulkImportGolds expect client send files with multipart/form-data
+func (handler *handler) postBulkImportGolds(context *gin.Context) {
 	fileHeader, err := context.FormFile("file")
 	if err != nil {
 		log.Printf("Error getting file header: %v", err)
@@ -50,7 +48,7 @@ func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
 	csvReader := csv.NewReader(file)
 
 	// recognize header position
-	// at the moment support: "Investment Type,Bank,Investment Date	Selling Date	Gold (Gram)	Purchase Unit Price	Selling Unit Price	Gainc/ Loss	Status	Remarks"
+	// at the moment support: "Investment Type,Bank,Investment Date	Selling Date	Gold (Gram)	Purchase Unit PriceHistory	Selling Unit PriceHistory	Gainc/ Loss	Status	Remarks"
 	indexByHeaderMap, err := identifyHeader(csvReader)
 	if err != nil {
 		log.Printf("Error reading file header: %v", err)
@@ -73,7 +71,7 @@ func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
 		return
 	}
 
-	err = handler.goldRepo.ReplaceAllByEntrySource("BulkImport", goldTxns)
+	err = handler.goldRepo.replaceAllByEntrySource("BulkImport", goldTxns)
 	if err != nil {
 		log.Printf("Error Replacing By Entry Source: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -82,8 +80,8 @@ func (handler *GoldHandler) PostBulkImportGolds(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"message": "Gold file import successful"})
 }
 
-func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]domains.GoldTxn, error) {
-	var goldTxns []domains.GoldTxn
+func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]Txn, error) {
+	var goldTxns []Txn
 
 	for _, record := range rows {
 		dateStr := record[indexByHeaderMap["TxnDate"]]
@@ -118,7 +116,7 @@ func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]domains.
 			return nil, err
 		}
 
-		goldTxns = append(goldTxns, domains.GoldTxn{
+		goldTxns = append(goldTxns, Txn{
 			ID:          uuid.New().String(),
 			Bank:        record[indexByHeaderMap["Bank"]],
 			TxnDate:     txnDate,
@@ -142,7 +140,7 @@ func identifyHeader(csvReader *csv.Reader) (map[string]int, error) {
 		var key string
 		if header == "Bank" {
 			key = "Bank"
-		} else if header == "Purchase Unit Price" {
+		} else if header == "Purchase Unit PriceHistory" {
 			key = "UnitPrice"
 		} else if header == "Investment Date" {
 			key = "TxnDate"
