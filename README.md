@@ -33,7 +33,7 @@
 ## Note for future self
 - Current/Next item to work with
   - Scraper
-    - after scrape, save value to gold price table
+    - test with real html page, 
   - Gold Management UI 
     - get latest gold price, calculate gold value and show "price as of yyyy-mm-dd"
 
@@ -72,6 +72,7 @@ backend/
 ```
 DBUSER=<replace with your username>
 DBPASS=<replace with your password>
+GOLD_URL=<Url to scrape gold price> // now it only support 1 local
 ```
 - `go run cmd/scrapper/main.go ` to start scrapper logic
 - `go` run cmd/server/main.go` to start web app logic 

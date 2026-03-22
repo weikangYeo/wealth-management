@@ -4,8 +4,8 @@ import (
 	"encoding/csv"
 	"log"
 	"net/http"
-	"regexp"
 	"time"
+	"wealth-management/internal/platform/decimal"
 
 	"github.com/cockroachdb/apd/v3"
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,7 @@ func newGoldHandler(fundRepo repository) handler {
 }
 
 func (handler *handler) getAllGoldsTxn(context *gin.Context) {
-	golds, err := handler.goldRepo.getAll()
+	golds, err := handler.goldRepo.getAllTxn()
 	if err != nil {
 		log.Printf("Error getting golds: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -71,7 +71,7 @@ func (handler *handler) postBulkImportGolds(context *gin.Context) {
 		return
 	}
 
-	err = handler.goldRepo.replaceAllByEntrySource("BulkImport", goldTxns)
+	err = handler.goldRepo.replaceAllTxnByEntrySource("BulkImport", goldTxns)
 	if err != nil {
 		log.Printf("Error Replacing By Entry Source: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -100,11 +100,11 @@ func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]Txn, err
 			txnType = "SOLD"
 		}
 
-		gram, err := toDecimal(record[indexByHeaderMap["Gram"]])
+		gram, err := decimal.ToDecimal(record[indexByHeaderMap["Gram"]])
 		if err != nil {
 			return nil, err
 		}
-		unitPrice, err := toDecimal(record[indexByHeaderMap["UnitPrice"]])
+		unitPrice, err := decimal.ToDecimal(record[indexByHeaderMap["UnitPrice"]])
 		if err != nil {
 			return nil, err
 		}
@@ -154,13 +154,4 @@ func identifyHeader(csvReader *csv.Reader) (map[string]int, error) {
 		}
 	}
 	return indexByHeaderMap, nil
-}
-
-func toDecimal(str string) (*apd.Decimal, error) {
-	numericStr := regexp.MustCompile("[^0-9.]").ReplaceAllString(str, "")
-	numeric, _, err := apd.NewFromString(numericStr)
-	if err != nil {
-		return nil, err
-	}
-	return numeric, nil
 }

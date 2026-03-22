@@ -1,4 +1,4 @@
-package routes
+package admin
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func registerPingRoute(r *gin.Engine) {
+func RegisterPingRoute(r *gin.Engine) {
 	r.GET("/ping", func(c *gin.Context) {
 		// Return JSON response
 		c.JSON(http.StatusOK, gin.H{

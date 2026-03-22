@@ -16,7 +16,7 @@ func newGoldRepository(db *sql.DB) repository {
 	return repository{db: db}
 }
 
-func (repo *repository) getAll() ([]Txn, error) {
+func (repo *repository) getAllTxn() ([]Txn, error) {
 	rows, err := repo.db.Query("SELECT * FROM gold_txn")
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (repo *repository) getAll() ([]Txn, error) {
 
 }
 
-func (repo *repository) replaceAllByEntrySource(entrySource string, goldTxns []Txn) error {
+func (repo *repository) replaceAllTxnByEntrySource(entrySource string, goldTxns []Txn) error {
 	tx, err := repo.db.Begin()
 	if err != nil {
 		return err
@@ -70,6 +70,23 @@ func (repo *repository) replaceAllByEntrySource(entrySource string, goldTxns []T
 		if err != nil {
 			return err
 		}
+	}
+	return tx.Commit()
+}
+
+func (repo *repository) insertOrUpdatePriceHistory(priceHistory PriceHistory) error {
+	tx, err := repo.db.Begin()
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("INSERT INTO gold_price_history VALUES (?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(
+		priceHistory.date,
+		priceHistory.buyPrice)
+	if err != nil {
+		return err
 	}
 	return tx.Commit()
 }

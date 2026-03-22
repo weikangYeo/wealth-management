@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
+	"wealth-management/internal/platform/database"
+	"wealth-management/internal/platform/decimal"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
@@ -14,6 +17,34 @@ import (
 func ScrapeGoldPrice() {
 	//html := getHtmlPage()
 	html := getTestingHtmlPage()
+	price, err := decimal.ToDecimal(getGoldPriceStrFromHtml(html))
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := database.InitDbConnection(false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if db != nil {
+		defer db.Close()
+	}
+
+	repository := newGoldRepository(db)
+
+	goldPrice := PriceHistory{
+		buyPrice: *price,
+		date:     time.Now().In(time.FixedZone("GMT+8", 8*60*60)),
+	}
+
+	err = repository.insertOrUpdatePriceHistory(goldPrice)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Successfully scraped gold price")
+
+}
+
+func getGoldPriceStrFromHtml(html string) string {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		log.Fatal(err)
@@ -57,6 +88,7 @@ func ScrapeGoldPrice() {
 		return true
 	})
 	log.Println("buyPrice:", buyPrice)
+	return buyPrice
 }
 
 func getTestingHtmlPage() string {
@@ -73,7 +105,7 @@ func getTestingHtmlPage() string {
 }
 
 func getHtmlPage() string {
-	targetURL := "https://www.maybank2u.com.my/maybank2u/malaysia/en/personal/rates/gold_and_silver.page"
+	targetURL := os.Getenv("GOLD_URL")
 	log.Printf("Scraping from %s", targetURL)
 
 	// chromedp: navigate, wait for content, grab HTML
