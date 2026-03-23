@@ -18,6 +18,6 @@ type Txn struct {
 }
 
 type PriceHistory struct {
-	date     time.Time
-	buyPrice apd.Decimal
+	Date     time.Time   `json:"date"`
+	BuyPrice apd.Decimal `json:"buyPrice"`
 }

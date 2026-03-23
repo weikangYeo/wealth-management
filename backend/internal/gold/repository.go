@@ -83,10 +83,21 @@ func (repo *repository) insertOrUpdatePriceHistory(priceHistory PriceHistory) er
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		priceHistory.date,
-		priceHistory.buyPrice)
+		priceHistory.Date,
+		priceHistory.BuyPrice)
 	if err != nil {
 		return err
 	}
 	return tx.Commit()
+}
+
+func (repo *repository) getLatestPrice() (PriceHistory, error) {
+	var priceHistory PriceHistory
+
+	err := repo.db.QueryRow("SELECT * FROM gold_price_history order by date desc limit 1").
+		Scan(&priceHistory.Date, &priceHistory.BuyPrice)
+	if err != nil {
+		return PriceHistory{}, err
+	}
+	return priceHistory, nil
 }

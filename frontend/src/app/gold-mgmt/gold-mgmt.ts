@@ -7,6 +7,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {CommonModule} from '@angular/common';
+import {MatTooltipModule} from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-gold-mgmt',
@@ -17,7 +18,8 @@ import {CommonModule} from '@angular/common';
     MatInputModule,
     MatButtonModule,
     CommonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatTooltipModule
   ],
   changeDetection: ChangeDetectionStrategy.Default, // or OnPush
   templateUrl: "./gold-mgmt-page.html",
@@ -28,6 +30,8 @@ export class GoldMgmt {
   private snackBar = inject(MatSnackBar);
   private goldService = inject(GoldService);
   protected goldTransactions = signal<GoldTxn[]>([]);
+  protected latestUnitPrice = signal<number>(0);
+  protected latestPriceDate = signal<string>("");
   selectedFile: File | null = null;
   fileName: string = '';
 
@@ -50,9 +54,36 @@ export class GoldMgmt {
     return gram > 0 ? this.totalPurchased() / gram : 0;
   });
 
+  protected latestGoldsValue = computed(() => {
+    const totalGram = this.totalGrams();
+    const latestUnitPrice = this.latestUnitPrice();
+    return Number(latestUnitPrice) * Number(totalGram);
+  });
+
+  protected unrealizedGainLoss = computed(() => {
+    const totalCost = this.totalPurchased();
+    const latestValue = this.latestGoldsValue();
+    return Number(latestValue) / Number(totalCost);
+  });
+
   ngOnInit() {
+    this.fetchAllTransactions();
+    this.fetchLatestPrice();
+  }
+
+  private fetchAllTransactions() {
     this.goldService.getAllTransactions().subscribe(data => {
       this.goldTransactions.set(data);
+    });
+  }
+
+  private fetchLatestPrice() {
+    this.goldService.getLatestPrice().subscribe({
+      next: value => {
+        this.latestUnitPrice.set(value.latestPrice);
+        this.latestPriceDate.set(value.date);
+      },
+      error: err => console.log('Error fetching latest price: ', err)
     });
   }
 

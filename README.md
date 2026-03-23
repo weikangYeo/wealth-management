@@ -32,8 +32,6 @@
 
 ## Note for future self
 - Current/Next item to work with
-  - Scraper
-    - test with real html page, 
   - Gold Management UI 
     - get latest gold price, calculate gold value and show "price as of yyyy-mm-dd"
 

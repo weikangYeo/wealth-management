@@ -7,3 +7,8 @@ export interface GoldTxn {
   totalPrice: number
   txnType: 'BUY' | 'SELL'
 }
+
+export interface GoldPrice {
+  latestPrice: number
+  date: string
+}

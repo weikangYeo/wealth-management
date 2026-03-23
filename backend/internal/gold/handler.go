@@ -30,6 +30,21 @@ func (handler *handler) getAllGoldsTxn(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"golds": golds})
 }
 
+func (handler *handler) getLatestPricesTxn(context *gin.Context) {
+	latestPrice, err := handler.goldRepo.getLatestPrice()
+	if err != nil {
+		log.Printf("Error getting gold prices: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	//context.JSON(http.StatusOK, gin.H{"latestPrice": latestPrice.BuyPrice, "date": latestPrice.Date})
+	price, err := latestPrice.BuyPrice.Value()
+	if err != nil {
+		log.Printf("Error getting gold price: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	context.JSON(http.StatusOK, gin.H{"latestPrice": price, "date": latestPrice.Date})
+}
+
 // postBulkImportGolds expect client send files with multipart/form-data
 func (handler *handler) postBulkImportGolds(context *gin.Context) {
 	fileHeader, err := context.FormFile("file")
@@ -115,7 +130,6 @@ func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]Txn, err
 		if err != nil {
 			return nil, err
 		}
-
 		goldTxns = append(goldTxns, Txn{
 			ID:          uuid.New().String(),
 			Bank:        record[indexByHeaderMap["Bank"]],
@@ -140,7 +154,7 @@ func identifyHeader(csvReader *csv.Reader) (map[string]int, error) {
 		var key string
 		if header == "Bank" {
 			key = "Bank"
-		} else if header == "Purchase Unit PriceHistory" {
+		} else if header == "Purchase Unit Price" {
 			key = "UnitPrice"
 		} else if header == "Investment Date" {
 			key = "TxnDate"
