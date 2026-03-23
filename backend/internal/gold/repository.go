@@ -77,7 +77,7 @@ func (repo *repository) replaceAllTxnByEntrySource(entrySource string, goldTxns 
 func (repo *repository) insertOrUpdatePriceHistory(priceHistory PriceHistory) error {
 	tx, err := repo.db.Begin()
 	defer tx.Rollback()
-	stmt, err := tx.Prepare("INSERT INTO gold_price_history VALUES (?,?)")
+	stmt, err := tx.Prepare("INSERT INTO gold_price_history(date, buy_price) VALUES (?,?) ON DUPLICATE KEY UPDATE buy_price=VALUES(buy_price)")
 	if err != nil {
 		return err
 	}

@@ -10,13 +10,19 @@ import (
 	"wealth-management/internal/platform/decimal"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 )
 
-// todo change back to lower case after testing
-func ScrapeGoldPrice() {
-	//html := getHtmlPage()
-	html := getTestingHtmlPage()
+func ScrapeGoldPrice(isTrial bool) {
+	var html string
+	if isTrial {
+		log.Println("Running in trial mode")
+		html = getTestingHtmlPage()
+	} else {
+		log.Println("Running in live mode")
+		html = getHtmlPage()
+	}
 	price, err := decimal.ToDecimal(getGoldPriceStrFromHtml(html))
 	if err != nil {
 		log.Fatal(err)
@@ -112,16 +118,49 @@ func getHtmlPage() string {
 	var html string
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", true))
+		chromedp.Flag("headless", true),
+		chromedp.Flag("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0"),
+	)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
 
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
+
+	ctx, cancelTimeout := context.WithTimeout(ctx, 45*time.Second)
+	defer cancelTimeout()
+
+	// Network telemetry: request/response/failure events.
+	var mainDocReqID network.RequestID
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		switch e := ev.(type) {
+		case *network.EventRequestWillBeSent:
+			if e.Type == network.ResourceTypeDocument {
+				mainDocReqID = e.RequestID
+				log.Printf("[REQ] doc %s %s", e.Request.Method, e.Request.URL)
+			}
+		case *network.EventResponseReceived:
+			if e.Type == network.ResourceTypeDocument || e.RequestID == mainDocReqID {
+				log.Printf("[RES] doc status=%v proto=%s mime=%s server=%s url=%s",
+					e.Response.Status,
+					e.Response.Protocol,
+					e.Response.MimeType,
+					e.Response.Headers["server"],
+					e.Response.URL,
+				)
+			}
+		case *network.EventLoadingFailed:
+			if e.Type == network.ResourceTypeDocument || e.RequestID == mainDocReqID {
+				log.Printf("[FAIL] doc requestId=%s canceled=%v blocked=%v error=%s",
+					e.RequestID, e.Canceled, e.BlockedReason, e.ErrorText)
+			}
+		}
+	})
+
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(targetURL),
-		chromedp.WaitVisible(`table`, chromedp.ByQuery),
+		chromedp.Sleep(6*time.Second), // let redirects/challenge scripts settle
 		chromedp.OuterHTML("html", &html),
 	)
 	if err != nil {
@@ -129,5 +168,13 @@ func getHtmlPage() string {
 	}
 	// then parse `html` with goquery (like jQuery for Go)	cookie := harvestCookie(targetURL)
 	log.Printf("html scraped.")
+
+	lc := strings.ToLower(html)
+	if strings.Contains(lc, "just a moment") ||
+		strings.Contains(lc, "captcha") ||
+		strings.Contains(lc, "attention required") ||
+		strings.Contains(lc, "access denied") {
+		log.Printf("Possible anti-bot/challenge page detected")
+	}
 	return html
 }
