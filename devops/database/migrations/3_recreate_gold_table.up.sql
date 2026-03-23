@@ -1,12 +1,12 @@
 CREATE TABLE gold_txn
 (
-    id           varchar(36) primary key not null,
-    bank         varchar(10),
-    txn_date     date,
-    gram         decimal(10, 2),
-    unit_price   decimal(10, 2),
-    total_price  decimal(12, 2),
-    txn_type     varchar(4),
-    entry_source varchar(10)
+    id           VARCHAR(36) PRIMARY KEY NOT NULL,
+    bank         VARCHAR(10),
+    txn_date     DATE,
+    gram         DECIMAL(10, 2),
+    unit_price   DECIMAL(10, 2),
+    total_price  DECIMAL(12, 2),
+    txn_type     VARCHAR(4),
+    entry_source VARCHAR(10)
 );
 

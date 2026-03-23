@@ -1,1 +1,1 @@
-drop table if exists gold_price_history;
+DROP TABLE IF EXISTS gold_price_history;

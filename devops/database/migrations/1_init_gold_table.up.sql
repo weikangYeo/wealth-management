@@ -1,10 +1,10 @@
-create table if not exists gold_txn
+CREATE TABLE IF NOT EXISTS gold_txn
 (
-    id          bigint primary key not null,
-    bank        varchar(10),
-    txn_date    date,
-    gram        decimal(10, 2),
-    unit_price  decimal(10, 2),
-    total_price decimal(12, 2),
-    txn_type    varchar(4)
+    id          BIGINT PRIMARY KEY NOT NULL,
+    bank        VARCHAR(10),
+    txn_date    DATE,
+    gram        DECIMAL(10, 2),
+    unit_price  DECIMAL(10, 2),
+    total_price DECIMAL(12, 2),
+    txn_type    VARCHAR(4)
 );

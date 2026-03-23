@@ -1,5 +1,5 @@
-create table if not exists gold_price_history
+CREATE TABLE IF NOT EXISTS gold_price_history
 (
-    date      date primary key not null,
-    buy_price decimal(10, 2)
+    date      DATE PRIMARY KEY NOT NULL,
+    buy_price DECIMAL(10, 2)
 );

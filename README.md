@@ -12,7 +12,8 @@
     - [ ] Investment type
         - [ ] Gold
         - [ ] Funds
-        - [ ] Stock
+        - [ ] Stock (CARD BASE)
+          - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
         - [ ] Cash
 - [ ] CRUD
     - [X] Import/Export
@@ -23,17 +24,15 @@
 - [ ] "Fun" Part - Web Scrapper
     - [ ] Funds Info & Price
     - [ ] Stock info & Price
-    - [ ] Gold info & Price
+    - [X] Gold Price
     - [ ] News that might relate
     - [ ] The ETL process of web scraped data and how to process it
 - [ ] Based on scrapped info, feed to LLM to provide suggestion
     - [ ] compare LLM rules and custom defined (by dev) rules
-- [ ] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
+- [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
 
 ## Note for future self
 - Current/Next item to work with
-  - Gold Management UI 
-    - get latest gold price, calculate gold value and show "price as of yyyy-mm-dd"
 
 ### File structure 
 
