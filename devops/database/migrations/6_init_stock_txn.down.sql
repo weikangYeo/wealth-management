@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS stock_dividend;
+DROP TABLE IF EXISTS stock_txn;
+DROP TABLE IF EXISTS stock;

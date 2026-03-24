@@ -14,4 +14,3 @@ import {FundsMgmt} from './funds-mgmt/funds-mgmt';
 export class App {
   protected readonly title = signal('frontend');
 }
-

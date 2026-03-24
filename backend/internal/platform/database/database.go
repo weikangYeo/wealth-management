@@ -25,6 +25,8 @@ func InitDbConnection(isRunMigration bool) (*sql.DB, error) {
 	cfg.Params = map[string]string{}
 	// so DB time (uint) value can be parsed to golang time
 	cfg.Params["parseTime"] = "true"
+	// when run migration multiple ddl can be executed in a same file
+	cfg.MultiStatements = true
 
 	var err error
 	db, err = sql.Open("mysql", cfg.FormatDSN())
