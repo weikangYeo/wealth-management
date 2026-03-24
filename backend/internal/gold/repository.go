@@ -4,16 +4,17 @@ import (
 	"database/sql"
 )
 
-// repository skip interface design here for now since repo still small (YNGNI)
+// note: repository skip interface design here for now since repo still small (YNGNI)
 type repository struct {
 	// this is to hold the ref of sql connection that created during app start, to pool connections.
 	db *sql.DB
 }
 
-// newGoldRepository use constructor so the db connection stay private and won't be modified,
+// note: use constructor so the db connection stay private and won't be modified,
 // else has to make it as Public to create FundRepo struct
-func newGoldRepository(db *sql.DB) repository {
-	return repository{db: db}
+func newGoldRepository(db *sql.DB) *repository {
+	// note: return a pointer for future-proof (might have mutex, counter, state var later)
+	return &repository{db: db}
 }
 
 func (repo *repository) getAllTxn() ([]Txn, error) {

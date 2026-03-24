@@ -33,6 +33,10 @@
 
 ## Note for future self
 - Current/Next item to work with
+  - Stock CRUD
+  - Stock UI integration
+  - Stock metrics calculation
+  - Stock price scraper
 
 ### File structure 
 

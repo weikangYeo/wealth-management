@@ -13,19 +13,23 @@ import (
 )
 
 type handler struct {
-	goldRepo repository
+	goldRepo *repository
 }
 
-// newGoldHandler it might be fine without but it is a contructor so goldRepo stay private and unmodified when created.
-func newGoldHandler(fundRepo repository) handler {
-	return handler{goldRepo: fundRepo}
+func newGoldHandler(goldRepo *repository) *handler {
+	return &handler{goldRepo: goldRepo}
 }
 
 func (handler *handler) getAllGoldsTxn(context *gin.Context) {
+	// note: regardless it is `goldRepo *repository` or `goldRepo repository`
+	// both able to call `handler.goldRepo.getAllTxn()`
+	// because go rewrite the second way as "(&handler.goldRepo).getAllTxn()"
+	// Go inserts & (or *) automatically when legal.
 	golds, err := handler.goldRepo.getAllTxn()
 	if err != nil {
 		log.Printf("Error getting golds: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	context.JSON(http.StatusOK, gin.H{"golds": golds})
 }
@@ -35,12 +39,14 @@ func (handler *handler) getLatestPricesTxn(context *gin.Context) {
 	if err != nil {
 		log.Printf("Error getting gold prices: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	//context.JSON(http.StatusOK, gin.H{"latestPrice": latestPrice.BuyPrice, "date": latestPrice.Date})
 	price, err := latestPrice.BuyPrice.Value()
 	if err != nil {
 		log.Printf("Error getting gold price: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	context.JSON(http.StatusOK, gin.H{"latestPrice": price, "date": latestPrice.Date})
 }

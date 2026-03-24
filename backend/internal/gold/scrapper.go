@@ -35,14 +35,14 @@ func ScrapeGoldPrice(isTrial bool) {
 		defer db.Close()
 	}
 
-	repository := newGoldRepository(db)
+	goldRepo := newGoldRepository(db)
 
 	goldPrice := PriceHistory{
 		BuyPrice: *price,
 		Date:     time.Now().In(time.FixedZone("GMT+8", 8*60*60)),
 	}
 
-	err = repository.insertOrUpdatePriceHistory(goldPrice)
+	err = goldRepo.insertOrUpdatePriceHistory(goldPrice)
 	if err != nil {
 		log.Fatal(err)
 	}
