@@ -15,10 +15,15 @@
         - [ ] Stock (CARD BASE)
           - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
         - [ ] Cash
-- [ ] CRUD
-    - [X] Import/Export
-        - [X] Upsert Gold Txn
+- [ ] Modules
+    - [X] Gold
+      - [X] Import/Export
+          - [X] Upsert Gold Txn
+      - [X] View and aggregated info
     - [ ] Item by Item CRUD
+    - [ ] Stock
+      - [ ] GET Stock API to include DY or other aggregated info I interested the most 
+      - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
 - [ ] Watch list
 - [ ] Revamp UI 
 - [ ] "Fun" Part - Web Scrapper
