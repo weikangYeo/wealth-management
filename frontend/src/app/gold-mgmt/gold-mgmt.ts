@@ -113,10 +113,6 @@ export class GoldMgmt {
       },
       error: (error) => {
         console.error('Import failed:', error);
-        // this.snackBar.open('Bulk Import Failed: ' + (error.error?.error || error.message), 'OK', {
-        //   duration: 3000,
-        //   verticalPosition: 'top'
-        // });
       }
     });
   }

@@ -2,11 +2,9 @@ import {CommonModule} from '@angular/common';
 import {Component, computed, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
-
-interface StockProfile {
-  stockCode: string;
-  displayName: string;
-}
+import {CreateStockModel} from './stock.model';
+import {StockService} from './stock.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 interface StockCard {
   stockCode: string;
@@ -24,13 +22,15 @@ interface StockCard {
 })
 export class StockMgmt {
   private readonly router = inject(Router);
+  private stockService = inject(StockService);
+  private snackBar = inject(MatSnackBar);
 
-  protected profileDraft = signal<StockProfile>({
+  protected createStockReq = signal<CreateStockModel>({
     stockCode: '',
     displayName: '',
   });
 
-  protected activeStock = signal<StockProfile | null>(null);
+  protected activeStock = signal<CreateStockModel | null>(null);
 
   protected stocks = signal<StockCard[]>([
     {stockCode: 'MAYBANK', displayName: 'Malayan Banking Berhad', dy: 5.84, avgPrice: 9.42, unit: 1200},
@@ -39,7 +39,7 @@ export class StockMgmt {
   ]);
 
   protected canSaveStock = computed(() => {
-    const draft = this.profileDraft();
+    const draft = this.createStockReq();
     return draft.stockCode.trim().length > 0 && draft.displayName.trim().length > 0;
   });
 
@@ -52,42 +52,53 @@ export class StockMgmt {
       return;
     }
 
-    const draft = this.profileDraft();
+    const draft = this.createStockReq();
     const stockCode = draft.stockCode.trim().toUpperCase();
     const displayName = draft.displayName.trim();
     this.activeStock.set({stockCode, displayName});
-
-    this.stocks.update((items) => {
-      const index = items.findIndex((item) => item.stockCode === stockCode);
-      if (index >= 0) {
-        const next = [...items];
-        next[index] = {...next[index], displayName};
-        return next;
+    this.stockService.createStock(draft).subscribe({
+      next: () => {
+        this.snackBar.open('Stock Code Added', 'OK', {
+          duration: 3000,
+          verticalPosition: 'top'
+        });
+        // todo recall GET api and reload stock list
+      }, error: (error) => {
+        console.error('Import failed:', error);
       }
-
-      return [
-        {
-          stockCode,
-          displayName,
-          dy: 0,
-          avgPrice: 0,
-          unit: 0,
-        },
-        ...items,
-      ];
     });
+
+    // this.stocks.update((items) => {
+    //   const index = items.findIndex((item) => item.stockCode === stockCode);
+    //   if (index >= 0) {
+    //     const next = [...items];
+    //     next[index] = {...next[index], displayName};
+    //     return next;
+    //   }
+    //
+    //   return [
+    //     {
+    //       stockCode,
+    //       displayName,
+    //       dy: 0,
+    //       avgPrice: 0,
+    //       unit: 0,
+    //     },
+    //     ...items,
+    //   ];
+    // });
   }
 
   protected openStockDetails(stockCode: string) {
     this.router.navigate(['/stocks', stockCode]);
   }
 
-  protected updateProfileStockCode(value: string) {
-    this.profileDraft.update((draft) => ({...draft, stockCode: value}));
+  protected updateStockCodeRequest(value: string) {
+    this.createStockReq.update((draft) => ({...draft, stockCode: value}));
   }
 
-  protected updateProfileDisplayName(value: string) {
-    this.profileDraft.update((draft) => ({...draft, displayName: value}));
+  protected updateStockDisplayNameReq(value: string) {
+    this.createStockReq.update((draft) => ({...draft, displayName: value}));
   }
 
 }

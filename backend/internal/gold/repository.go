@@ -18,7 +18,7 @@ func newGoldRepository(db *sql.DB) *repository {
 }
 
 func (repo *repository) getAllTxn() ([]Txn, error) {
-	rows, err := repo.db.Query("SELECT * FROM gold_txn")
+	rows, err := repo.db.Query("SELECT * FROM gold_txn order by txn_date")
 	if err != nil {
 		return nil, err
 	}

@@ -6,21 +6,21 @@ import {map} from 'rxjs';
 @Injectable({providedIn: 'root'})
 export class GoldService {
   private http = inject(HttpClient);
-  private readonly GOLD_RESOURCE_API_URL = `/golds`;
+  private readonly GOLD_DOMAIN_API_URL = `/golds`;
 
   getAllTransactions() {
-    return this.http.get<{ golds: GoldTxn[] }>(this.GOLD_RESOURCE_API_URL)
+    return this.http.get<{ golds: GoldTxn[] }>(this.GOLD_DOMAIN_API_URL)
       .pipe(map(res => res.golds))
   }
 
   getLatestPrice() {
-    return this.http.get<GoldPrice>(this.GOLD_RESOURCE_API_URL+"/prices/latest")
+    return this.http.get<GoldPrice>(this.GOLD_DOMAIN_API_URL+"/prices/latest")
   }
 
   bulkImportGolds(file : File) {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{message: string}>(this.GOLD_RESOURCE_API_URL+"/bulk-imports", formData);
+    return this.http.post<{message: string}>(this.GOLD_DOMAIN_API_URL+"/bulk-imports", formData);
 
   }
 

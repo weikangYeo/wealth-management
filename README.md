@@ -20,6 +20,7 @@
       - [X] Import/Export
           - [X] Upsert Gold Txn
       - [X] View and aggregated info
+      - [ ] Scrape gold price by banks
     - [ ] Item by Item CRUD
     - [ ] Stock
       - [ ] GET Stock API to include DY or other aggregated info I interested the most 
@@ -39,6 +40,9 @@
 ## Note for future self
 - Current/Next item to work with
   - Stock CRUD
+    - [X] create stock code
+      - [ ]list stock aggregated info after create
+    - list stock aggregated info
   - Stock UI integration
   - Stock metrics calculation
   - Stock price scraper
