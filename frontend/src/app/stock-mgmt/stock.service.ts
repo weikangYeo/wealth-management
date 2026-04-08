@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {CreateStockModel, StockAggregatedInfo} from './stock.model';
+import {CreateStockModel, PaginatedResponse, StockAggregatedInfo} from './stock.model';
 
 @Injectable({providedIn: 'root'})
 export class StockService {
@@ -12,6 +12,6 @@ export class StockService {
   }
 
   getStocks() {
-    return this.http.get<StockAggregatedInfo>(this.STOCK_DOMAIN_API_URL);
+    return this.http.get<PaginatedResponse<StockAggregatedInfo>>(this.STOCK_DOMAIN_API_URL);
   }
 }

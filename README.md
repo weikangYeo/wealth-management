@@ -39,11 +39,7 @@
 
 ## Note for future self
 - Current/Next item to work with
-  - Stock CRUD
-    - [X] create stock code
-      - [ ]list stock aggregated info after create
-    - list stock aggregated info
-  - Stock UI integration
+  - Stock Detail navigation
   - Stock metrics calculation
   - Stock price scraper
 

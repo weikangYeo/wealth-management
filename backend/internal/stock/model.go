@@ -7,13 +7,13 @@ import (
 )
 
 type Stock struct {
-	StockCode   string `json:"stock_code"`
-	DisplayName string `json:"display_name"`
+	StockCode   string `json:"stockCode"`
+	DisplayName string `json:"displayName"`
 }
 
 type Txn struct {
 	ID         string      `json:"id"`
-	StockCode  string      `json:"stock_code"`
+	StockCode  string      `json:"stockCode"`
 	TxnDate    time.Time   `json:"txnDate"`
 	Unit       apd.Decimal `json:"unit"`
 	UnitPrice  apd.Decimal `json:"unitPrice"`
@@ -24,7 +24,7 @@ type Txn struct {
 }
 
 type Dividend struct {
-	StockCode string      `json:"stock_code"`
-	TxnDate   time.Time   `json:"txn_date"`
+	StockCode string      `json:"stockCode"`
+	TxnDate   time.Time   `json:"txnDate"`
 	Amount    apd.Decimal `json:"amount"`
 }

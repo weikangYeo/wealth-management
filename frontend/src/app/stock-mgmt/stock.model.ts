@@ -10,3 +10,7 @@ export interface StockAggregatedInfo extends CreateStockModel {
   profitLostPercentage: number;
   // todo fill in another details
 }
+
+export interface PaginatedResponse<T> {
+  content: T[]
+}

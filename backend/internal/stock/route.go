@@ -11,7 +11,7 @@ func RegisterStockRoutes(r *gin.Engine, db *sql.DB) {
 	stockHandler := newStockHandler(repo)
 	stockRoutes := r.Group("/stocks")
 	{
-		stockRoutes.GET("", stockHandler.getAllStockSummary)
+		stockRoutes.GET("", stockHandler.getAllStock)
 		stockRoutes.POST("", stockHandler.postStock)
 	}
 }

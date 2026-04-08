@@ -11,7 +11,7 @@ func newStockRepository(db *sql.DB) *repository {
 }
 
 func (r repository) getAllStocks() ([]Stock, error) {
-	rows, err := r.db.Query("SELECT * FROM stock")
+	rows, err := r.db.Query("SELECT stock_code, display_name FROM stock order by stock_code")
 	if err != nil {
 		return nil, err
 	}

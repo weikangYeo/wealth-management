@@ -2,17 +2,9 @@ import {CommonModule} from '@angular/common';
 import {Component, computed, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
-import {CreateStockModel} from './stock.model';
+import {CreateStockModel, StockAggregatedInfo} from './stock.model';
 import {StockService} from './stock.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
-
-interface StockCard {
-  stockCode: string;
-  displayName: string;
-  dy: number;
-  avgPrice: number;
-  unit: number;
-}
 
 @Component({
   selector: 'app-stock-mgmt',
@@ -32,11 +24,7 @@ export class StockMgmt {
 
   protected activeStock = signal<CreateStockModel | null>(null);
 
-  protected stocks = signal<StockCard[]>([
-    {stockCode: 'MAYBANK', displayName: 'Malayan Banking Berhad', dy: 5.84, avgPrice: 9.42, unit: 1200},
-    {stockCode: 'TENAGA', displayName: 'Tenaga Nasional Berhad', dy: 3.17, avgPrice: 10.19, unit: 600},
-    {stockCode: 'CIMB', displayName: 'CIMB Group Holdings', dy: 4.56, avgPrice: 6.84, unit: 950},
-  ]);
+  protected stocks = signal<StockAggregatedInfo[]>([]);
 
   protected canSaveStock = computed(() => {
     const draft = this.createStockReq();
@@ -62,31 +50,11 @@ export class StockMgmt {
           duration: 3000,
           verticalPosition: 'top'
         });
-        // todo recall GET api and reload stock list
+        this.fetchAllStockProfile();
       }, error: (error) => {
         console.error('Import failed:', error);
       }
     });
-
-    // this.stocks.update((items) => {
-    //   const index = items.findIndex((item) => item.stockCode === stockCode);
-    //   if (index >= 0) {
-    //     const next = [...items];
-    //     next[index] = {...next[index], displayName};
-    //     return next;
-    //   }
-    //
-    //   return [
-    //     {
-    //       stockCode,
-    //       displayName,
-    //       dy: 0,
-    //       avgPrice: 0,
-    //       unit: 0,
-    //     },
-    //     ...items,
-    //   ];
-    // });
   }
 
   protected openStockDetails(stockCode: string) {
@@ -99,6 +67,16 @@ export class StockMgmt {
 
   protected updateStockDisplayNameReq(value: string) {
     this.createStockReq.update((draft) => ({...draft, displayName: value}));
+  }
+
+  private fetchAllStockProfile(){
+    this.stockService.getStocks().subscribe(data => {
+      this.stocks.set(data.content)
+    })
+  }
+
+  ngOnInit() {
+    this.fetchAllStockProfile();
   }
 
 }
