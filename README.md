@@ -40,6 +40,9 @@
 ## Note for future self
 - Current/Next item to work with
   - Stock Detail navigation
+    - Stock Detail - get stock summary
+    - Stock Detail - create stock txn
+    - Stock Detail - get stock txn
   - Stock metrics calculation
   - Stock price scraper
 

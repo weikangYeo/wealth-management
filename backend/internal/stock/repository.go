@@ -48,8 +48,8 @@ func (r repository) createStock(stock Stock) error {
 	return tx.Commit()
 }
 
-func (r repository) getAllStockTxn() ([]Txn, error) {
-	rows, err := r.db.Query("SELECT * from stock_txn")
+func (r repository) getStockTxnByStockCode(stockCode string) ([]Txn, error) {
+	rows, err := r.db.Query("SELECT * from stock_txn where stock_code = ? order by txn_date desc", stockCode)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +64,23 @@ func (r repository) getAllStockTxn() ([]Txn, error) {
 		txns = append(txns, txn)
 	}
 	return txns, nil
+}
+
+func (r repository) createStockTxn(stockTxn Txn) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("INSERT INTO stock_txn (id, stock_code, txn_date, unit, unit_price, broker_fee, total_price, txn_type, remark) values (?,?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	if _, err := stmt.Exec(stockTxn.ID, stockTxn.StockCode, stockTxn.TxnDate, stockTxn.Unit, stockTxn.UnitPrice, stockTxn.BrokerFee, stockTxn.TotalPrice, stockTxn.TxnType, stockTxn.Remark); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r repository) getAllDividend() ([]Dividend, error) {
