@@ -16,10 +16,11 @@ export class StockDetail {
   private stockService = inject(StockService);
   private snackBar = inject(MatSnackBar);
 
-  protected stockCode = signal<String>('');
+  protected stockName = signal<String>('');
   protected stockOverview = signal<StockOverview>({
-    stockCode: '',
+    stockName: '',
     displayName: '',
+    bursaStockId: 0,
     unit: 0,
     averagePrice: 0,
     realizedGainLoss: 0,
@@ -38,10 +39,10 @@ export class StockDetail {
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
-      const stockCode = (params.get('code') ?? 'UNKNOWN').toUpperCase();
-      this.stockCode.set(stockCode);
-      this.loadStockOverview(stockCode);
-      this.loadStockTransactions(stockCode);
+      const stockName = (params.get('code') ?? 'UNKNOWN').toUpperCase();
+      this.stockName.set(stockName);
+      this.loadStockOverview(stockName);
+      this.loadStockTransactions(stockName);
     });
   }
 
@@ -82,23 +83,23 @@ export class StockDetail {
       remark: remark?.trim() || '',
     };
 
-    this.stockService.createTransaction(this.stockCode().toString(), newTxn).subscribe(data => {
+    this.stockService.createTransaction(this.stockName().toString(), newTxn).subscribe(data => {
       this.snackBar.open('Create Transaction Successful', 'OK', {
         duration: 3000,
         verticalPosition: 'top'
       });
-      this.loadStockTransactions(this.stockCode().toString());
+      this.loadStockTransactions(this.stockName().toString());
     });
   }
 
-  private loadStockOverview(stockCode: string) {
-    this.stockService.getStockOverviewByStockCode(stockCode).subscribe(data => {
+  private loadStockOverview(stockName: string) {
+    this.stockService.getStockOverviewByStockName(stockName).subscribe(data => {
       this.stockOverview.set(data);
     });
   }
 
-  private loadStockTransactions(stockCode: string) {
-    this.stockService.getStockTransactions(stockCode).subscribe(data => {
+  private loadStockTransactions(stockName: string) {
+    this.stockService.getStockTransactionsByStockName(stockName).subscribe(data => {
       this.transactions.set(data.content);
     });
   }

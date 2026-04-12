@@ -28,14 +28,14 @@ func (handler *handler) getAllStock(context *gin.Context) {
 	}
 	log.Printf("Retrieved %d stocks from database", len(stocks))
 	for i, stock := range stocks {
-		log.Printf("Stock %d: StockCode='%s', DisplayName='%s'", i, stock.StockCode, stock.DisplayName)
+		log.Printf("Stock %d: StockName='%s', DisplayName='%s'", i, stock.StockName, stock.DisplayName)
 	}
 	context.JSON(http.StatusOK, gin.H{"content": stocks})
 }
 
 // todo enhance to include more aggregated details
 func (handler *handler) getStockOverview(context *gin.Context) {
-	stock, err := handler.stockRepo.getStockByCode(context.Param("stockCode"))
+	stock, err := handler.stockRepo.getStockByStockName(context.Param("stockName"))
 	if err != nil {
 		log.Printf("Error getting stock: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -45,8 +45,8 @@ func (handler *handler) getStockOverview(context *gin.Context) {
 }
 
 func (handler *handler) getAllStockTransactions(context *gin.Context) {
-	stockCode := context.Param("stockCode")
-	stocks, err := handler.stockRepo.getStockTxnByStockCode(stockCode)
+	stockName := context.Param("stockName")
+	stocks, err := handler.stockRepo.getStockTxnByStockName(stockName)
 	if err != nil {
 		log.Printf("Error getting all stocks summary: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -71,7 +71,7 @@ func (handler *handler) createStock(context *gin.Context) {
 }
 
 func (handler *handler) createStockTxn(context *gin.Context) {
-	stockCode := context.Param("stockCode")
+	stockName := context.Param("stockName")
 	var req TxnRequest
 	if err := context.ShouldBindJSON(&req); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -80,7 +80,7 @@ func (handler *handler) createStockTxn(context *gin.Context) {
 
 	txn := Txn{
 		ID:        uuid.New().String(),
-		StockCode: stockCode,
+		StockName: stockName,
 		TxnDate:   req.TxnDate,
 		Unit:      req.Unit,
 		UnitPrice: req.UnitPrice,

@@ -8,13 +8,14 @@ import (
 )
 
 type Stock struct {
-	StockCode   string `json:"stockCode"`
-	DisplayName string `json:"displayName"`
+	StockName    string `json:"stockName"`
+	DisplayName  string `json:"displayName"`
+	BursaStockId int    `json:"bursaStockId"`
 }
 
 type Txn struct {
 	ID         string      `json:"id"`
-	StockCode  string      `json:"stockCode"`
+	StockName  string      `json:"stockName"`
 	TxnDate    time.Time   `json:"txnDate"`
 	Unit       apd.Decimal `json:"unit"`
 	UnitPrice  apd.Decimal `json:"unitPrice"`
@@ -34,7 +35,7 @@ type TxnRequest struct {
 }
 
 type Dividend struct {
-	StockCode string      `json:"stockCode"`
+	StockName string      `json:"stockName"`
 	TxnDate   time.Time   `json:"txnDate"`
 	Amount    apd.Decimal `json:"amount"`
 }
@@ -76,6 +77,41 @@ func (t *TxnRequest) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+//func (t *Stock) UnmarshalJSON(data []byte) error {
+//	type Alias Stock
+//	aux := &struct {
+//		StockName    string `json:"stockName"`
+//		DisplayName  string `json:"displayName"`
+//		BursaStockId string `json:"bursaStockId"`
+//		*Alias
+//	}{
+//		Alias: (*Alias)(t),
+//	}
+//
+//	if err := json.Unmarshal(data, &aux); err != nil {
+//		return err
+//	}
+//	// Parse date in YYYY-MM-DD format (funny go format, probably has to memorize it)
+//	parsedTime, err := time.Parse("2006-01-02", aux.TxnDate)
+//	if err != nil {
+//		return err
+//	}
+//
+//	t.TxnDate = parsedTime
+//	// Parse decimal fields from json.Number to apd.Decimal
+//	ctx := apd.BaseContext
+//	if _, _, err := ctx.SetString(&t.Unit, aux.Unit.String()); err != nil {
+//		return err
+//	}
+//	if _, _, err := ctx.SetString(&t.UnitPrice, aux.UnitPrice.String()); err != nil {
+//		return err
+//	}
+//	if _, _, err := ctx.SetString(&t.BrokerFee, aux.BrokerFee.String()); err != nil {
+//		return err
+//	}
+//	return nil
+//}
 
 func (t *Txn) MarshalJSON() ([]byte, error) {
 	type Alias Txn

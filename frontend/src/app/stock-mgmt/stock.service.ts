@@ -15,15 +15,15 @@ export class StockService {
     return this.http.get<PaginatedResponse<StockOverview>>(this.STOCK_DOMAIN_API_URL);
   }
 
-  getStockOverviewByStockCode(stockCode: string) {
-    return this.http.get<StockOverview>(`${this.STOCK_DOMAIN_API_URL}/${stockCode}/overviews`);
+  getStockOverviewByStockName(stockName: string) {
+    return this.http.get<StockOverview>(`${this.STOCK_DOMAIN_API_URL}/${stockName}/overviews`);
   }
 
-  getStockTransactions(stockCode: string) {
-    return this.http.get<PaginatedResponse<StockTxn>>(this.STOCK_DOMAIN_API_URL + `/${stockCode}/transactions`);
+  getStockTransactionsByStockName(stockName: string) {
+    return this.http.get<PaginatedResponse<StockTxn>>(this.STOCK_DOMAIN_API_URL + `/${stockName}/transactions`);
   }
 
-  createTransaction(stockCode: string, txn: StockTxn) {
-    return this.http.post(this.STOCK_DOMAIN_API_URL + `/${stockCode}/transactions`, txn);
+  createTransaction(stockName: string, txn: StockTxn) {
+    return this.http.post(this.STOCK_DOMAIN_API_URL + `/${stockName}/transactions`, txn);
   }
 }

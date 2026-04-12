@@ -23,6 +23,7 @@
       - [ ] Scrape gold price by banks
     - [ ] Item by Item CRUD
     - [ ] Stock
+      - [ ] Scrape Stock Price
       - [ ] Dividend Input fields (Stepper component)
       - [ ] Dividend Graph over the years
       - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
@@ -44,8 +45,7 @@
 - Current/Next item to work with
   - Stock Detail navigation
     - Stock Detail - get stock summary
-    - Stock Detail - create stock txn
-    - Stock Detail - get stock txn
+  - Stock Price Scrape
   - Stock metrics calculation
   - Stock price scraper
 

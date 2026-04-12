@@ -17,33 +17,28 @@ export class StockMgmt {
   private stockService = inject(StockService);
   private snackBar = inject(MatSnackBar);
 
-  protected createStockReq = signal<CreateStockModel>({
-    stockCode: '',
-    displayName: '',
-  });
-
   protected activeStock = signal<CreateStockModel | null>(null);
 
   protected stocks = signal<StockOverview[]>([]);
-
-  protected canSaveStock = computed(() => {
-    const draft = this.createStockReq();
-    return draft.stockCode.trim().length > 0 && draft.displayName.trim().length > 0;
-  });
 
   protected stockCount = computed(() =>
     this.stocks().length
   );
 
-  protected saveStockProfile() {
-    if (!this.canSaveStock()) {
+  protected saveStockProfile(stockName: string, displayName: string, bursaStockId: string) {
+
+    if (!stockName || !displayName || !bursaStockId) {
+      this.snackBar.open('Missing mandatory field to create stock code', 'OK', {
+        duration: 3000,
+        verticalPosition: 'top'
+      });
       return;
     }
-
-    const draft = this.createStockReq();
-    const stockCode = draft.stockCode.trim().toUpperCase();
-    const displayName = draft.displayName.trim();
-    this.activeStock.set({stockCode, displayName});
+    const draft: CreateStockModel = {
+      stockName: stockName,
+      displayName: displayName,
+      bursaStockId: Number(bursaStockId),
+    }
     this.stockService.createStock(draft).subscribe({
       next: () => {
         this.snackBar.open('Stock Code Added', 'OK', {
@@ -57,22 +52,14 @@ export class StockMgmt {
     });
   }
 
-  protected openStockDetails(stockCode: string) {
-    this.router.navigate(['/stocks', stockCode]);
+  protected openStockDetails(stockName: string) {
+    this.router.navigate(['/stocks', stockName]);
   }
 
-  protected updateStockCodeRequest(value: string) {
-    this.createStockReq.update((draft) => ({...draft, stockCode: value}));
-  }
-
-  protected updateStockDisplayNameReq(value: string) {
-    this.createStockReq.update((draft) => ({...draft, displayName: value}));
-  }
-
-  private fetchAllStockProfile(){
+  private fetchAllStockProfile() {
     this.stockService.getStocks().subscribe(data => {
-      this.stocks.set(data.content)
-    })
+      this.stocks.set(data.content);
+    });
   }
 
   ngOnInit() {
