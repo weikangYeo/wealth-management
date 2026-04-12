@@ -31,6 +31,15 @@ func (r repository) getAllStocks() ([]Stock, error) {
 	return stocks, nil
 }
 
+func (r repository) getStockByCode(code string) (Stock, error) {
+	var stock Stock
+	err := r.db.QueryRow("SELECT stock_code, display_name FROM stock where stock_code=? ", code).Scan(&stock.StockCode, &stock.DisplayName)
+	if err != nil {
+		return Stock{}, err
+	}
+	return stock, nil
+}
+
 func (r repository) createStock(stock Stock) error {
 	tx, err := r.db.Begin()
 	if err != nil {

@@ -1,14 +1,31 @@
+export type TxnType = 'BUY' | 'SELL';
+
+
 export interface CreateStockModel {
   stockCode: string;
   displayName: string;
 }
 
-export interface StockAggregatedInfo extends CreateStockModel {
+export interface StockOverview extends CreateStockModel {
   dividendYield: number;
-  avgPrice: number;
+  averagePrice: number;
   unit: number;
   profitLostPercentage: number;
+  realizedGainLoss: 0,
+  unrealizedGainLoss: 0,
+  annualizedReturn: 0,
   // todo fill in another details
+}
+
+export interface StockTxn {
+  id?: string;
+  txnDate: string;
+  txnType: TxnType;
+  unit: number;
+  unitPrice: number;
+  brokerFee: number;
+  totalPrice: number;
+  remark: string;
 }
 
 export interface PaginatedResponse<T> {

@@ -2,7 +2,7 @@ import {CommonModule} from '@angular/common';
 import {Component, computed, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
-import {CreateStockModel, StockAggregatedInfo} from './stock.model';
+import {CreateStockModel, StockOverview} from './stock.model';
 import {StockService} from './stock.service';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
@@ -24,7 +24,7 @@ export class StockMgmt {
 
   protected activeStock = signal<CreateStockModel | null>(null);
 
-  protected stocks = signal<StockAggregatedInfo[]>([]);
+  protected stocks = signal<StockOverview[]>([]);
 
   protected canSaveStock = computed(() => {
     const draft = this.createStockReq();

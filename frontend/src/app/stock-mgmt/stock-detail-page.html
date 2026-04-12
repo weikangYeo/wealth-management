@@ -6,52 +6,52 @@
   <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
     <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ stockSummary().stockCode }}</p>
-        <h2 class="text-xl font-bold text-slate-900">{{ stockSummary().displayName }}</h2>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ stockOverview().stockCode }}</p>
+        <h2 class="text-xl font-bold text-slate-900">{{ stockOverview().displayName }}</h2>
       </div>
       <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-        DY {{ stockSummary().dy | number:'1.2-2' }}%
+        DY {{ stockOverview().dividendYield | number:'1.2-2' }}%
       </span>
     </div>
 
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <div class="rounded-lg bg-slate-50 px-3 py-2">
         <p class="text-xs text-slate-500">Unit</p>
-        <p class="font-semibold text-slate-900">{{ stockSummary().unit | number:'1.0-0' }}</p>
+        <p class="font-semibold text-slate-900">{{ stockOverview().unit | number:'1.0-0' }}</p>
       </div>
       <div class="rounded-lg bg-slate-50 px-3 py-2">
         <p class="text-xs text-slate-500">Average Price</p>
-        <p class="font-semibold text-slate-900">RM {{ stockSummary().averagePrice | number:'1.2-2' }}</p>
+        <p class="font-semibold text-slate-900">RM {{ stockOverview().averagePrice | number:'1.2-2' }}</p>
       </div>
       <div class="rounded-lg bg-slate-50 px-3 py-2">
         <p class="text-xs text-slate-500">Realized Gain/Loss</p>
         <p
           class="font-semibold"
-          [class.text-emerald-700]="stockSummary().realizedGainLoss >= 0"
-          [class.text-rose-700]="stockSummary().realizedGainLoss < 0"
+          [class.text-emerald-700]="stockOverview().realizedGainLoss >= 0"
+          [class.text-rose-700]="stockOverview().realizedGainLoss < 0"
         >
-          RM {{ stockSummary().realizedGainLoss | number:'1.2-2' }}
+          RM {{ stockOverview().realizedGainLoss | number:'1.2-2' }}
         </p>
       </div>
       <div class="rounded-lg bg-slate-50 px-3 py-2">
         <p class="text-xs text-slate-500">Unrealized Gain/Loss</p>
         <p
           class="font-semibold"
-          [class.text-emerald-700]="stockSummary().unrealizedGainLoss >= 0"
-          [class.text-rose-700]="stockSummary().unrealizedGainLoss < 0"
+          [class.text-emerald-700]="stockOverview().unrealizedGainLoss >= 0"
+          [class.text-rose-700]="stockOverview().unrealizedGainLoss < 0"
         >
-          RM {{ stockSummary().unrealizedGainLoss | number:'1.2-2' }}
+          RM {{ stockOverview().unrealizedGainLoss | number:'1.2-2' }}
         </p>
       </div>
       <div class="rounded-lg bg-slate-50 px-3 py-2">
         <p class="text-xs text-slate-500">Annualized Return</p>
-        <p class="font-semibold text-slate-900">{{ stockSummary().annualizedReturn | number:'1.2-2' }}%</p>
+        <p class="font-semibold text-slate-900">{{ stockOverview().annualizedReturn | number:'1.2-2' }}%</p>
       </div>
     </div>
   </div>
 
   <div class="grid gap-6 lg:grid-cols-5">
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2 text-zinc-950">
       <h3 class="text-lg font-bold text-slate-900">Add Transaction</h3>
       <p class="mt-1 text-sm text-slate-500">Fields with * are required.</p>
 
@@ -60,9 +60,8 @@
           <label class="mb-1 block text-sm font-medium text-slate-700">Transaction Date *</label>
           <input
             type="date"
+            #txnDate
             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            [ngModel]="txnDraft().txnDate"
-            (ngModelChange)="updateTxnDate($event)"
           />
         </div>
 
@@ -70,9 +69,8 @@
           <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">Type *</label>
             <select
+              #txnType
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              [ngModel]="txnDraft().txnType"
-              (ngModelChange)="updateTxnType($event)"
             >
               <option value="BUY">BUY</option>
               <option value="SELL">SELL</option>
@@ -83,11 +81,10 @@
             <label class="mb-1 block text-sm font-medium text-slate-700">Unit *</label>
             <input
               type="number"
+              #unit
               min="0"
               step="0.0001"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              [ngModel]="txnDraft().unit"
-              (ngModelChange)="updateTxnUnit($event)"
             />
           </div>
         </div>
@@ -97,11 +94,10 @@
             <label class="mb-1 block text-sm font-medium text-slate-700">Unit Price (RM) *</label>
             <input
               type="number"
+              #unitPrice
               min="0"
               step="0.01"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              [ngModel]="txnDraft().unitPrice"
-              (ngModelChange)="updateTxnUnitPrice($event)"
             />
           </div>
 
@@ -109,11 +105,10 @@
             <label class="mb-1 block text-sm font-medium text-slate-700">Broker Fee (RM)</label>
             <input
               type="number"
+              #brokerFee
               min="0"
               step="0.01"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              [ngModel]="txnDraft().brokerFee"
-              (ngModelChange)="updateTxnBrokerFee($event)"
             />
           </div>
         </div>
@@ -121,23 +116,17 @@
         <div>
           <label class="mb-1 block text-sm font-medium text-slate-700">Remark</label>
           <textarea
+            #remark
             rows="3"
             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
             placeholder="Optional notes"
-            [ngModel]="txnDraft().remark"
-            (ngModelChange)="updateTxnRemark($event)"
           ></textarea>
-        </div>
-
-        <div class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-          Estimated Total: <span class="font-semibold">RM {{ estimatedTotal() | number:'1.2-2' }}</span>
         </div>
 
         <button
           type="button"
           class="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-          [disabled]="!canAddTxn()"
-          (click)="addTxn()"
+          (click)="addTxn(txnDate.value, txnType.value, unit.value, unitPrice.value, brokerFee.value, remark.value); txnDate.value=''; txnType.value='BUY'; unit.value=''; unitPrice.value=''; brokerFee.value=''; remark.value=''"
         >
           Add Transaction
         </button>

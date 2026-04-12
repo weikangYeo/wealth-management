@@ -23,6 +23,9 @@
       - [ ] Scrape gold price by banks
     - [ ] Item by Item CRUD
     - [ ] Stock
+      - [ ] Dividend Input fields (Stepper component)
+      - [ ] Dividend Graph over the years
+      - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
       - [ ] GET Stock API to include DY or other aggregated info I interested the most 
       - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
 - [ ] Watch list

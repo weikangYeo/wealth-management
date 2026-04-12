@@ -1,208 +1,108 @@
 import {CommonModule} from '@angular/common';
 import {Component, computed, inject, signal} from '@angular/core';
-import {FormsModule} from '@angular/forms';
 import {ActivatedRoute, RouterLink} from '@angular/router';
-
-type TxnType = 'BUY' | 'SELL';
-
-interface StockSummary {
-  stockCode: string;
-  displayName: string;
-  dy: number;
-  unit: number;
-  averagePrice: number;
-  realizedGainLoss: number;
-  unrealizedGainLoss: number;
-  annualizedReturn: number;
-}
-
-interface StockTxn {
-  id: string;
-  txnDate: string;
-  txnType: TxnType;
-  unit: number;
-  unitPrice: number;
-  brokerFee: number;
-  totalPrice: number;
-  remark: string;
-}
+import {StockOverview, StockTxn, TxnType} from './stock.model';
+import {StockService} from './stock.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-stock-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './stock-detail-page.html',
 })
 export class StockDetail {
   private readonly route = inject(ActivatedRoute);
+  private stockService = inject(StockService);
+  private snackBar = inject(MatSnackBar);
 
-  protected stockSummary = signal<StockSummary>({
+  protected stockCode = signal<String>('');
+  protected stockOverview = signal<StockOverview>({
     stockCode: '',
     displayName: '',
-    dy: 0,
     unit: 0,
     averagePrice: 0,
     realizedGainLoss: 0,
     unrealizedGainLoss: 0,
     annualizedReturn: 0,
-  });
-
-  protected txnDraft = signal({
-    txnDate: '',
-    txnType: 'BUY' as TxnType,
-    unit: 0,
-    unitPrice: 0,
-    brokerFee: 0,
-    remark: '',
+    dividendYield: 0,
+    profitLostPercentage: 0
   });
 
   protected transactions = signal<StockTxn[]>([]);
 
-  protected canAddTxn = computed(() => {
-    const draft = this.txnDraft();
-    return !!draft.txnDate && draft.unit > 0 && draft.unitPrice > 0;
-  });
-
-  protected estimatedTotal = computed(() => {
-    const draft = this.txnDraft();
-    return draft.unit * draft.unitPrice + draft.brokerFee;
-  });
-
   protected totalTxnValue = computed(() =>
-    this.transactions().reduce((sum, txn) => sum + txn.totalPrice, 0)
+    this.transactions().reduce(
+      (sum, txn) => sum + txn.totalPrice, 0)
   );
 
-  constructor() {
+  ngOnInit() {
     this.route.paramMap.subscribe((params) => {
       const stockCode = (params.get('code') ?? 'UNKNOWN').toUpperCase();
-      this.stockSummary.set(this.buildMockSummary(stockCode));
-      this.transactions.set(this.buildMockTransactions(stockCode));
+      this.stockCode.set(stockCode);
+      this.loadStockOverview(stockCode);
+      this.loadStockTransactions(stockCode);
     });
   }
 
-  protected addTxn() {
-    if (!this.canAddTxn()) {
+  protected addTxn(
+    txnDate: string,
+    txnType: string,
+    unit: string,
+    unitPrice: string,
+    brokerFee: string,
+    remark: string
+  ) {
+
+    // Validate required fields
+    if (!txnDate || !unit ) {
+      this.snackBar.open('Date or Unit is empty', 'OK', {
+        duration: 3000,
+        verticalPosition: 'top'
+      });
       return;
     }
 
-    const draft = this.txnDraft();
+    const unitNum = Number(unit);
+    const unitPriceNum = Number(unitPrice) || 0;
+    const brokerFeeNum = Number(brokerFee) || 0;
+
+    if (unitNum <= 0 ) {
+      return;
+    }
+
     const newTxn: StockTxn = {
       id: crypto.randomUUID(),
-      txnDate: draft.txnDate,
-      txnType: draft.txnType,
-      unit: Number(draft.unit),
-      unitPrice: Number(draft.unitPrice),
-      brokerFee: Number(draft.brokerFee),
-      totalPrice: this.estimatedTotal(),
-      remark: draft.remark.trim(),
+      txnDate,
+      txnType: txnType as TxnType,
+      unit: unitNum,
+      unitPrice: unitPriceNum,
+      brokerFee: brokerFeeNum,
+      totalPrice: unitNum * unitPriceNum + brokerFeeNum,
+      remark: remark?.trim() || '',
     };
 
-    this.transactions.update((txns) => [newTxn, ...txns]);
-    this.txnDraft.update((value) => ({
-      ...value,
-      txnDate: '',
-      unit: 0,
-      unitPrice: 0,
-      brokerFee: 0,
-      remark: '',
-    }));
+    this.stockService.createTransaction(this.stockCode().toString(), newTxn).subscribe(data => {
+      this.snackBar.open('Create Transaction Successful', 'OK', {
+        duration: 3000,
+        verticalPosition: 'top'
+      });
+      this.loadStockTransactions(this.stockCode().toString());
+    });
   }
 
-  protected updateTxnDate(value: string) {
-    this.txnDraft.update((draft) => ({...draft, txnDate: value}));
+  private loadStockOverview(stockCode: string) {
+    this.stockService.getStockOverviewByStockCode(stockCode).subscribe(data => {
+      this.stockOverview.set(data);
+    });
   }
 
-  protected updateTxnType(value: TxnType) {
-    this.txnDraft.update((draft) => ({...draft, txnType: value}));
+  private loadStockTransactions(stockCode: string) {
+    this.stockService.getStockTransactions(stockCode).subscribe(data => {
+      this.transactions.set(data.content);
+    });
   }
 
-  protected updateTxnUnit(value: number) {
-    this.txnDraft.update((draft) => ({...draft, unit: Number(value)}));
-  }
-
-  protected updateTxnUnitPrice(value: number) {
-    this.txnDraft.update((draft) => ({...draft, unitPrice: Number(value)}));
-  }
-
-  protected updateTxnBrokerFee(value: number) {
-    this.txnDraft.update((draft) => ({...draft, brokerFee: Number(value)}));
-  }
-
-  protected updateTxnRemark(value: string) {
-    this.txnDraft.update((draft) => ({...draft, remark: value}));
-  }
-
-  private buildMockSummary(stockCode: string): StockSummary {
-    const preset: Record<string, StockSummary> = {
-      MAYBANK: {
-        stockCode: 'MAYBANK',
-        displayName: 'Malayan Banking Berhad',
-        dy: 5.84,
-        unit: 1200,
-        averagePrice: 9.42,
-        realizedGainLoss: 1250,
-        unrealizedGainLoss: 980,
-        annualizedReturn: 7.1,
-      },
-      TENAGA: {
-        stockCode: 'TENAGA',
-        displayName: 'Tenaga Nasional Berhad',
-        dy: 3.17,
-        unit: 600,
-        averagePrice: 10.19,
-        realizedGainLoss: -150,
-        unrealizedGainLoss: 420,
-        annualizedReturn: 5.4,
-      },
-      CIMB: {
-        stockCode: 'CIMB',
-        displayName: 'CIMB Group Holdings',
-        dy: 4.56,
-        unit: 950,
-        averagePrice: 6.84,
-        realizedGainLoss: 300,
-        unrealizedGainLoss: -90,
-        annualizedReturn: 6.0,
-      },
-    };
-
-    return (
-      preset[stockCode] ?? {
-        stockCode,
-        displayName: `${stockCode} Holdings`,
-        dy: 0,
-        unit: 0,
-        averagePrice: 0,
-        realizedGainLoss: 0,
-        unrealizedGainLoss: 0,
-        annualizedReturn: 0,
-      }
-    );
-  }
-
-  private buildMockTransactions(stockCode: string): StockTxn[] {
-    return [
-      {
-        id: `${stockCode}-1`,
-        txnDate: '2025-11-04',
-        txnType: 'BUY',
-        unit: 300,
-        unitPrice: 9.38,
-        brokerFee: 8,
-        totalPrice: 2822,
-        remark: 'Monthly DCA',
-      },
-      {
-        id: `${stockCode}-2`,
-        txnDate: '2025-09-02',
-        txnType: 'BUY',
-        unit: 200,
-        unitPrice: 9.55,
-        brokerFee: 8,
-        totalPrice: 1918,
-        remark: 'Dip buy',
-      },
-    ];
-  }
+  protected readonly Number = Number;
 }
 

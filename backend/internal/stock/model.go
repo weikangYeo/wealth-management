@@ -24,6 +24,15 @@ type Txn struct {
 	Remark     string      `json:"remark"`
 }
 
+type TxnRequest struct {
+	TxnDate   time.Time   `json:"txnDate"`
+	Unit      apd.Decimal `json:"unit"`
+	UnitPrice apd.Decimal `json:"unitPrice"`
+	BrokerFee apd.Decimal `json:"brokerFee"`
+	TxnType   string      `json:"txnType"`
+	Remark    string      `json:"remark"`
+}
+
 type Dividend struct {
 	StockCode string      `json:"stockCode"`
 	TxnDate   time.Time   `json:"txnDate"`
@@ -32,10 +41,13 @@ type Dividend struct {
 
 // UnmarshalJSON Custom JSON unmarshaling for date parsing,
 // auto called when ShouldBindJSON called
-func (t *Txn) UnmarshalJSON(data []byte) error {
-	type Alias Txn
+func (t *TxnRequest) UnmarshalJSON(data []byte) error {
+	type Alias TxnRequest
 	aux := &struct {
-		TxnDate string `json:"txnDate"`
+		TxnDate   string      `json:"txnDate"`
+		Unit      json.Number `json:"unit"`      // Parse as string
+		UnitPrice json.Number `json:"unitPrice"` // Parse as string
+		BrokerFee json.Number `json:"brokerFee"`
 		*Alias
 	}{
 		Alias: (*Alias)(t),
@@ -44,7 +56,6 @@ func (t *Txn) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-
 	// Parse date in YYYY-MM-DD format (funny go format, probably has to memorize it)
 	parsedTime, err := time.Parse("2006-01-02", aux.TxnDate)
 	if err != nil {
@@ -52,7 +63,35 @@ func (t *Txn) UnmarshalJSON(data []byte) error {
 	}
 
 	t.TxnDate = parsedTime
+	// Parse decimal fields from json.Number to apd.Decimal
+	ctx := apd.BaseContext
+	if _, _, err := ctx.SetString(&t.Unit, aux.Unit.String()); err != nil {
+		return err
+	}
+	if _, _, err := ctx.SetString(&t.UnitPrice, aux.UnitPrice.String()); err != nil {
+		return err
+	}
+	if _, _, err := ctx.SetString(&t.BrokerFee, aux.BrokerFee.String()); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (t *Txn) MarshalJSON() ([]byte, error) {
+	type Alias Txn
+	return json.Marshal(&struct {
+		Unit       json.Number `json:"unit"`
+		UnitPrice  json.Number `json:"unitPrice"`
+		BrokerFee  json.Number `json:"brokerFee"`
+		TotalPrice json.Number `json:"totalPrice"`
+		*Alias
+	}{
+		Unit:       json.Number(t.Unit.String()),
+		UnitPrice:  json.Number(t.UnitPrice.String()),
+		BrokerFee:  json.Number(t.BrokerFee.String()),
+		TotalPrice: json.Number(t.TotalPrice.String()),
+		Alias:      (*Alias)(t),
+	})
 }
 
 // CalculateTotalPrice computes totalPrice = (unitPrice * unit) + brokerFee

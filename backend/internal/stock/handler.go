@@ -33,6 +33,17 @@ func (handler *handler) getAllStock(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"content": stocks})
 }
 
+// todo enhance to include more aggregated details
+func (handler *handler) getStockOverview(context *gin.Context) {
+	stock, err := handler.stockRepo.getStockByCode(context.Param("stockCode"))
+	if err != nil {
+		log.Printf("Error getting stock: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, stock)
+}
+
 func (handler *handler) getAllStockTransactions(context *gin.Context) {
 	stockCode := context.Param("stockCode")
 	stocks, err := handler.stockRepo.getStockTxnByStockCode(stockCode)
@@ -60,24 +71,32 @@ func (handler *handler) createStock(context *gin.Context) {
 }
 
 func (handler *handler) createStockTxn(context *gin.Context) {
-	var req Txn
+	stockCode := context.Param("stockCode")
+	var req TxnRequest
 	if err := context.ShouldBindJSON(&req); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if req.ID == "" {
-		req.ID = uuid.New().String()
+	txn := Txn{
+		ID:        uuid.New().String(),
+		StockCode: stockCode,
+		TxnDate:   req.TxnDate,
+		Unit:      req.Unit,
+		UnitPrice: req.UnitPrice,
+		BrokerFee: req.BrokerFee,
+		TxnType:   req.TxnType,
+		Remark:    req.Remark,
 	}
 
 	// Calculate total price
 	decimalCtx := apd.BaseContext.WithPrecision(12)
-	if err := req.CalculateTotalPrice(decimalCtx); err != nil {
+	if err := txn.CalculateTotalPrice(decimalCtx); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
 		return
 	}
 
-	if err := handler.stockRepo.createStockTxn(req); err != nil {
+	if err := handler.stockRepo.createStockTxn(txn); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
