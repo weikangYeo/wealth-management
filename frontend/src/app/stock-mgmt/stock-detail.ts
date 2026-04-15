@@ -31,6 +31,10 @@ export class StockDetail {
   });
 
   protected transactions = signal<StockTxn[]>([]);
+  // signal to control the add stock/dividend tab
+  protected addTab = signal<'transaction' | 'dividend'>('transaction');
+  // signal to control list of stock/dividend tab
+  protected listTab = signal<'transaction' | 'dividend'>('transaction');
 
   protected totalTxnValue = computed(() =>
     this.transactions().reduce(
