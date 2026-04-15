@@ -40,6 +40,12 @@ type Dividend struct {
 	Amount    apd.Decimal `json:"amount"`
 }
 
+type Price struct {
+	StockName     string
+	PriceDate     time.Time
+	LastDonePrice apd.Decimal
+}
+
 // UnmarshalJSON Custom JSON unmarshaling for date parsing,
 // auto called when ShouldBindJSON called
 func (t *TxnRequest) UnmarshalJSON(data []byte) error {
@@ -77,41 +83,6 @@ func (t *TxnRequest) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
-
-//func (t *Stock) UnmarshalJSON(data []byte) error {
-//	type Alias Stock
-//	aux := &struct {
-//		StockName    string `json:"stockName"`
-//		DisplayName  string `json:"displayName"`
-//		BursaStockId string `json:"bursaStockId"`
-//		*Alias
-//	}{
-//		Alias: (*Alias)(t),
-//	}
-//
-//	if err := json.Unmarshal(data, &aux); err != nil {
-//		return err
-//	}
-//	// Parse date in YYYY-MM-DD format (funny go format, probably has to memorize it)
-//	parsedTime, err := time.Parse("2006-01-02", aux.TxnDate)
-//	if err != nil {
-//		return err
-//	}
-//
-//	t.TxnDate = parsedTime
-//	// Parse decimal fields from json.Number to apd.Decimal
-//	ctx := apd.BaseContext
-//	if _, _, err := ctx.SetString(&t.Unit, aux.Unit.String()); err != nil {
-//		return err
-//	}
-//	if _, _, err := ctx.SetString(&t.UnitPrice, aux.UnitPrice.String()); err != nil {
-//		return err
-//	}
-//	if _, _, err := ctx.SetString(&t.BrokerFee, aux.BrokerFee.String()); err != nil {
-//		return err
-//	}
-//	return nil
-//}
 
 func (t *Txn) MarshalJSON() ([]byte, error) {
 	type Alias Txn

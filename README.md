@@ -23,6 +23,7 @@
       - [ ] Scrape gold price by banks
     - [ ] Item by Item CRUD
     - [ ] Stock
+      - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
       - [ ] Scrape Stock Price
       - [ ] Dividend Input fields (Stepper component)
       - [ ] Dividend Graph over the years
@@ -85,6 +86,7 @@ backend/
 DBUSER=<replace with your username>
 DBPASS=<replace with your password>
 GOLD_URL=<Url to scrape gold price> // now it only support 1 local
+STOCK_URL=<Url to scrape stock price> // now it only support bursa company profile
 ```
 - `go run cmd/scrapper/main.go ` to start scrapper logic
 - `go` run cmd/server/main.go` to start web app logic 

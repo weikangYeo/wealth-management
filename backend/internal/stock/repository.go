@@ -11,7 +11,7 @@ func newStockRepository(db *sql.DB) *repository {
 }
 
 func (r repository) getAllStocks() ([]Stock, error) {
-	rows, err := r.db.Query("SELECT stock_name, display_name FROM stock order by stock_name")
+	rows, err := r.db.Query("SELECT stock_name, display_name, bursa_stock_id FROM stock order by stock_name")
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func (r repository) getAllStocks() ([]Stock, error) {
 	stocks := []Stock{}
 	for rows.Next() {
 		var stock Stock
-		if err := rows.Scan(&stock.StockName, &stock.DisplayName); err != nil {
+		if err := rows.Scan(&stock.StockName, &stock.DisplayName, &stock.BursaStockId); err != nil {
 			return nil, err
 		}
 		stocks = append(stocks, stock)
@@ -125,6 +125,23 @@ func (r repository) createDividend(dividend Dividend) error {
 	}
 	defer stmt.Close()
 	if _, err := stmt.Exec(dividend.StockName, dividend.TxnDate, dividend.Amount); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r repository) createStockPrice(stockPrice Price) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("INSERT INTO stock_price(stock_name, price_date, last_done_price) VALUES (?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	if _, err := stmt.Exec(stockPrice.StockName, stockPrice.PriceDate, stockPrice.LastDonePrice); err != nil {
 		return err
 	}
 	return tx.Commit()
