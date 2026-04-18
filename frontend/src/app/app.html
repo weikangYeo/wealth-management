@@ -1,27 +1,66 @@
-<div class="flex h-screen bg-[#0A2647] text-white">
-  <!-- Side Navigation -->
-  <aside class="w-64 bg-[#0A2647] p-4 space-y-2 flex-shrink-0">
-    <div class="text-2xl font-bold mb-6 text-center">Wealth Management</div>
-    <nav>
-      <a routerLink="/" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">Home</a>
-      <a routerLink="/gold" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">Gold Management</a>
-      <a routerLink="/stocks" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">Stock Management (Mock)</a>
-      <a routerLink="/funds" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">Funds (Placeholder)</a>
+<div class="flex h-screen overflow-hidden text-white">
+
+  <!-- Sidebar -->
+  <aside class="sidebar-gradient w-60 flex-shrink-0 flex flex-col py-6 px-4 border-r border-white/10">
+    <div class="mb-8 px-2">
+      <span class="text-lg font-bold tracking-tight text-indigo-300">Wealth</span>
+      <span class="text-lg font-bold tracking-tight text-white"> Management</span>
+    </div>
+
+    <nav class="flex flex-col gap-1 flex-1">
+      <a routerLink="/" routerLinkActive="nav-item-active" [routerLinkActiveOptions]="{exact:true}"
+        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Home
+      </a>
+      <a routerLink="/gold" routerLinkActive="nav-item-active"
+        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Gold Management
+      </a>
+      <a routerLink="/stocks" routerLinkActive="nav-item-active"
+        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Stock Management
+      </a>
+      <a routerLink="/funds" routerLinkActive="nav-item-active"
+        class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 opacity-50 cursor-not-allowed pointer-events-none">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Funds
+        <span class="ml-auto text-[10px] bg-slate-700 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
+      </a>
     </nav>
+
+    <!-- User -->
+    <div class="glass rounded-xl p-3 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-xs font-bold flex-shrink-0">WK</div>
+      <div class="min-w-0">
+        <p class="text-xs font-semibold text-white truncate">Wei Kang</p>
+        <p class="text-xs text-slate-500">Investor</p>
+      </div>
+    </div>
   </aside>
 
-  <!-- Main Content Area -->
+  <!-- Main -->
   <div class="flex-1 flex flex-col overflow-hidden">
+
     <!-- Header -->
-    <header class="bg-[#0A2647] shadow-lg p-4 flex items-center justify-between flex-shrink-0">
-      <h1 class="text-3xl font-semibold">TO show Overall P&L here</h1>
-      <!-- User/Auth Placeholder -->
-      <div class="text-lg">Welcome, User!</div>
+    <header class="glass flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
+      <div>
+        <p class="text-xs text-slate-500 uppercase tracking-widest">Overall P&amp;L</p>
+        <p class="text-sm font-semibold text-slate-400 italic">— to be implemented —</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="glass rounded-lg px-3 py-1.5 text-xs text-slate-400">
+          Welcome, Wei Kang
+        </div>
+      </div>
     </header>
 
     <!-- Page Content -->
-    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+    <main class="flex-1 overflow-x-hidden overflow-y-auto p-6">
       <router-outlet></router-outlet>
     </main>
+
   </div>
 </div>

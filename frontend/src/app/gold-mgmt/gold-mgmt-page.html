@@ -1,112 +1,119 @@
-<!-- Main Container -->
-<div class="flex flex-col justify-center items-center min-h-screen bg-gray-100 p-4">
+<div class="mx-auto w-full max-w-5xl space-y-5">
 
-  <!-- Gold Card -->
-  <div
-    class="bg-white rounded-xl shadow-sm border border-gray-200 w-full max-w-250 p-8 flex flex-col md:flex-row justify-between items-center gap-6">
+  <!-- Page title -->
+  <div>
+    <p class="text-xs text-slate-500 uppercase tracking-widest mb-1">Portfolio</p>
+    <h1 class="text-xl font-bold text-white">Gold Management</h1>
+  </div>
 
-    <!-- Gold Icon and Weight Section -->
-    <div class="flex items-center justify-start flex-[1.5] w-full md:w-auto">
-      <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#FFEB3B"><path d="M332-120q-88 0-150-62t-62-150q0-38 13-72.5t36-63.5l152-182-95-190h509l-95 190 151 182q24 29 36.5 63.5T841-332q0 88-62 150t-150 62H332Zm148-218q-25 0-42-17.5T421-398q0-25 17-42.5t42-17.5q26 0 43.5 17.5T541-398q0 25-17.5 42.5T480-338ZM375-675h210l53-105H323l52 105Zm-43 495h296q63 0 107.5-44.5T780-332q0-27-9-52t-26-45L590-615H370L216-429q-17 20-26.5 45t-9.5 52q0 63 44.5 107.5T332-180Z"/></svg>      <span class="text-2xl font-bold text-yellow-500 whitespace-nowrap">
-        {{ totalGrams() | number:'1.2-2' }} g
-      </span>
+  <!-- KPI Summary Row -->
+  <div class="grid grid-cols-4 gap-4">
+
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs text-slate-500 uppercase tracking-wider mb-3">Total Gold Held</p>
+      <p class="text-2xl font-bold text-amber-300">{{ totalGrams() | number:'1.2-2' }} g</p>
+      <p class="text-xs text-slate-500 mt-1">Physical gold</p>
     </div>
 
-    <!-- Avg Purchase Price -->
-    <div class="flex flex-col text-center flex-1">
-      <span class="text-[13px] text-gray-500 font-semibold mb-2">Avg Purchase Price</span>
-      <span class="text-lg font-extrabold text-black">RM {{ avgPurchasePrice() | number:'1.2-2' }} /g</span>
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs text-slate-500 uppercase tracking-wider mb-3">Avg Purchase Price</p>
+      <p class="text-2xl font-bold text-white">RM {{ avgPurchasePrice() | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-500 mt-1">per gram</p>
     </div>
 
-    <!-- Total Purchased -->
-    <div class="flex flex-col text-center flex-1">
-      <span class="text-[13px] text-gray-500 font-semibold mb-2">Total Purchased</span>
-      <span class="text-lg font-extrabold text-black">RM {{ totalPurchased() | number:'1.2-2' }}</span>
+    <div class="glass-card rounded-2xl p-5">
+      <p class="text-xs text-slate-500 uppercase tracking-wider mb-3">Total Invested</p>
+      <p class="text-2xl font-bold text-white">RM {{ totalPurchased() | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-500 mt-1">Cost basis</p>
     </div>
 
-    <!-- Current Gold Value -->
-    <div class="flex flex-col text-center flex-1">
-      <span class="text-[13px] text-gray-500 font-semibold mb-2 inline-flex items-center justify-center gap-1">
-        Current Gold Value
-        <mat-icon
-          class="text-xs cursor-help"
-          [matTooltip]="'As of ' + (latestPriceDate() | date:'yyyy-MM-dd')">
-          info
-        </mat-icon>
-      </span>
-
-      <!-- Value with Profit Percentage on same line -->
-      <span class="text-lg font-extrabold flex items-center justify-center gap-2"
-            [class.text-green-600]="unrealizedGainLoss() >= 1"
-            [class.text-red-600]="unrealizedGainLoss() < 1">
+    <div class="glass-card rounded-2xl p-5"
+         [class.glow-emerald]="unrealizedGainLoss() >= 1">
+      <p class="text-xs text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+        Current Value
+        <mat-icon class="!text-[13px] !h-[13px] !w-[13px] cursor-help text-slate-500"
+          [matTooltip]="'As of ' + (latestPriceDate() | date:'yyyy-MM-dd')">info</mat-icon>
+      </p>
+      <p class="text-2xl font-bold"
+         [class.text-emerald-400]="unrealizedGainLoss() >= 1"
+         [class.text-rose-400]="unrealizedGainLoss() < 1">
         RM {{ latestGoldsValue() | number:'1.2-2' }}
-
+      </p>
+      <div class="flex items-center gap-1 mt-1">
         @if (unrealizedGainLoss() >= 1) {
-          <!-- Arrow Up for positive gain -->
-          <mat-icon
-            class="text-xs cursor-help"
-            [matTooltip]="(((unrealizedGainLoss() - 1) * 100) | number:'1.2-2' ) + '%'">
-          arrow_upward
-          </mat-icon>
+          <mat-icon class="!text-[12px] !h-[12px] !w-[12px] text-emerald-400"
+            [matTooltip]="(((unrealizedGainLoss() - 1) * 100) | number:'1.2-2') + '%'">arrow_upward</mat-icon>
+          <span class="text-xs text-emerald-400 font-medium">
+            +{{ ((unrealizedGainLoss() - 1) * 100) | number:'1.2-2' }}%
+          </span>
         } @else {
-          <!-- Arrow Down for negative loss -->
-          <mat-icon
-            class="text-xs cursor-help"
-            [matTooltip]="(((unrealizedGainLoss() - 1) * 100) | number:'1.2-2' ) + '%'">
-          arrow_downward
-          </mat-icon>
+          <mat-icon class="!text-[12px] !h-[12px] !w-[12px] text-rose-400"
+            [matTooltip]="(((unrealizedGainLoss() - 1) * 100) | number:'1.2-2') + '%'">arrow_downward</mat-icon>
+          <span class="text-xs text-rose-400 font-medium">
+            {{ ((unrealizedGainLoss() - 1) * 100) | number:'1.2-2' }}%
+          </span>
         }
-      </span>
-    </div>
-
-
-  </div>
-
-  <div class="w-full max-w-250 p-8">
-    <div class="overflow-hidden rounded-lg border border-s-gray-200">
-      <table class="w-full border-collapse bg-white text-left text-sm text-gray-500">
-        <thead>
-        <tr>
-          <th class="px-6 py-4 font-medium text-gray-900">Bank</th>
-          <th class="px-6 py-4 font-medium text-gray-900">Date</th>
-          <th class="px-6 py-4 font-medium text-gray-900">Gram(g)</th>
-          <th class="px-6 py-4 font-medium text-gray-900">Unit Price(RM)</th>
-          <th class="px-6 py-4 font-medium text-gray-900">Total Price(RM)</th>
-          <th class="px-6 py-4 font-medium text-gray-900">Action</th>
-        </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 border-t border-gray-100">
-        <!-- todo consider move it to a child component -->
-          @for (txn of goldTransactions(); track txn.id) {
-            <tr class="hover:bg-gray-50">
-              <td class="px-6 py-4 text-xs">{{ txn.bank }}</td>
-              <td class="px-6 py-4 text-xs">{{ txn.txnDate | date }}</td>
-              <td class="px-6 py-4 text-xs text-right">{{ txn.gram }}</td>
-              <td class="px-6 py-4 text-xs text-right">{{ txn.unitPrice }}</td>
-              <td class="px-6 py-4 text-xs text-right">{{ txn.totalPrice }}</td>
-              <td class="px-6 py-4 text-xs">
-                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold"
-                          [class]="txn.txnType === 'BUY' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
-                      {{ txn.txnType }}
-                    </span>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="px-6 py-10 text-center text-gray-400">No transactions found.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-
+      </div>
     </div>
 
   </div>
 
-  <div class="w-full max-w-250 py-8 ">
-    <div class="flex flex-col text-center flex-1">
-      <mat-form-field appearance="outline">
-        <mat-label>Upload gold transaction file (CSV)</mat-label>
+  <!-- Two-column: Transactions table + Import panel -->
+  <div class="grid grid-cols-5 gap-5 items-start">
+
+    <!-- Transactions Table (3 cols) -->
+    <div class="col-span-3 glass-card rounded-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-white/8">
+        <h2 class="text-sm font-bold text-white">Transaction History</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
+              <th class="text-left px-5 py-3 font-semibold bg-white/3">Bank</th>
+              <th class="text-left px-4 py-3 font-semibold bg-white/3">Date</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Gram (g)</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit Price</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Total (RM)</th>
+              <th class="text-center px-4 py-3 font-semibold bg-white/3">Type</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            @for (txn of goldTransactions(); track txn.id) {
+              <tr class="glass-row transition-colors">
+                <td class="px-5 py-3.5 text-xs font-medium text-slate-300">{{ txn.bank }}</td>
+                <td class="px-4 py-3.5 text-xs text-slate-500">{{ txn.txnDate | date }}</td>
+                <td class="px-4 py-3.5 text-xs text-right text-slate-300 font-medium">{{ txn.gram }}</td>
+                <td class="px-4 py-3.5 text-xs text-right text-slate-400">{{ txn.unitPrice }}</td>
+                <td class="px-4 py-3.5 text-xs text-right text-slate-300 font-medium">{{ txn.totalPrice }}</td>
+                <td class="px-4 py-3.5 text-xs text-center">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
+                        [class]="txn.txnType === 'BUY'
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
+                          : 'bg-rose-500/15 text-rose-400 border border-rose-500/25'">
+                    {{ txn.txnType }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-5 py-12 text-center text-sm text-slate-500">
+                  No transactions yet. Import a CSV to get started.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Import Panel (2 cols) -->
+    <div class="col-span-2 glass-card rounded-2xl p-5">
+      <h2 class="text-sm font-bold text-white mb-1">Bulk Import</h2>
+      <p class="text-xs text-slate-500 mb-5">Upload a CSV file to import your gold transactions.</p>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Gold transaction file (CSV)</mat-label>
         <input
           matInput
           type="text"
@@ -120,6 +127,7 @@
           <mat-icon>attach_file</mat-icon>
         </button>
       </mat-form-field>
+
       <input
         #fileInput
         id="fileInput"
@@ -128,16 +136,20 @@
         style="display:none;"
         (change)="onFileSelected($event)"
       />
+
       <button
         mat-raised-button
         color="primary"
         (click)="onBulkImport()"
         [disabled]="!selectedFile"
-        class="mt-4"
+        class="w-full mt-2"
       >
         Bulk Import
       </button>
+
+      <p class="text-xs text-slate-600 mt-4">CSV format: Bank, Date, Gram, Unit Price, Total Price, Type.</p>
     </div>
+
   </div>
 
 </div>

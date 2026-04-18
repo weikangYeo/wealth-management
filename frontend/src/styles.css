@@ -1,3 +1,59 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+
+/* ── Dark app shell ──────────────────────────────────────────── */
+body {
+  background: #0b0f1a;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Glass utilities ─────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-indigo {
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.2);
+}
+
+/* ── Sidebar gradient ────────────────────────────────────────── */
+.sidebar-gradient {
+  background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+}
+
+/* ── Nav item states ─────────────────────────────────────────── */
+.nav-item {
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.nav-item:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-left-color: #818cf8;
+}
+
+.nav-item-active {
+  background: rgba(99, 102, 241, 0.2);
+  border-left-color: #6366f1;
+  color: #a5b4fc;
+}
+
+/* ── Stock/glass card hover ──────────────────────────────────── */
+.glass-row:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
