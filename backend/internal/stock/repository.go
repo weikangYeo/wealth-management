@@ -1,6 +1,11 @@
 package stock
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+
+	"github.com/cockroachdb/apd/v3"
+)
 
 type repository struct {
 	db *sql.DB
@@ -93,7 +98,7 @@ func (r repository) createStockTxn(stockTxn Txn) error {
 }
 
 func (r repository) getAllDividend() ([]Dividend, error) {
-	rows, err := r.db.Query("SELECT * FROM dividend")
+	rows, err := r.db.Query("SELECT stock_name, ex_date, payment_date, stock_unit, dividend_per_unit, tax, gross_amount, net_amount, remark FROM stock_dividend")
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +106,9 @@ func (r repository) getAllDividend() ([]Dividend, error) {
 	dividends := []Dividend{}
 	for rows.Next() {
 		var dividend Dividend
-		if err := rows.Scan(&dividend.StockName, &dividend.TxnDate, &dividend.Amount); err != nil {
+		if err := rows.Scan(&dividend.StockName, &dividend.ExDate, &dividend.PaymentDate,
+			&dividend.StockUnit, &dividend.DividendPerUnit, &dividend.TaxPercentage,
+			&dividend.GrossAmount, &dividend.NetAmount, &dividend.Remark); err != nil {
 			return nil, err
 		}
 		dividends = append(dividends, dividend)
@@ -110,7 +117,6 @@ func (r repository) getAllDividend() ([]Dividend, error) {
 		return nil, err
 	}
 	return dividends, nil
-
 }
 
 func (r repository) createDividend(dividend Dividend) error {
@@ -119,15 +125,48 @@ func (r repository) createDividend(dividend Dividend) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare("INSERT INTO stock_dividend VALUES (?,?,?)")
+	stmt, err := tx.Prepare("INSERT INTO stock_dividend (stock_name, ex_date, payment_date, stock_unit, dividend_per_unit, tax, gross_amount, net_amount, remark) VALUES (?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(dividend.StockName, dividend.TxnDate, dividend.Amount); err != nil {
+	if _, err := stmt.Exec(dividend.StockName, dividend.ExDate, dividend.PaymentDate,
+		dividend.StockUnit, dividend.DividendPerUnit, dividend.TaxPercentage,
+		dividend.GrossAmount, dividend.NetAmount, dividend.Remark); err != nil {
 		return err
 	}
 	return tx.Commit()
+}
+
+func (r repository) existsDividend(stockName string, exDate time.Time) (bool, error) {
+	var count int
+	err := r.db.QueryRow(
+		"SELECT COUNT(*) FROM stock_dividend WHERE stock_name = ? AND ex_date = ?",
+		stockName, exDate,
+	).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// getNetStockUnitAtDate returns the net units held for a stock on a given date
+// by summing BUY transactions and subtracting SELL transactions up to that date.
+func (r repository) getNetStockUnitAtDate(stockName string, date time.Time) (apd.Decimal, error) {
+	var netBytes []byte
+	err := r.db.QueryRow(
+		`SELECT COALESCE(SUM(CASE WHEN txn_type = 'BUY' THEN unit ELSE -unit END), '0')
+		 FROM stock_txn WHERE stock_name = ? AND txn_date <= ?`,
+		stockName, date,
+	).Scan(&netBytes)
+	if err != nil {
+		return apd.Decimal{}, err
+	}
+	d, _, err := apd.NewFromString(string(netBytes))
+	if err != nil {
+		return apd.Decimal{}, err
+	}
+	return *d, nil
 }
 
 func (r repository) createStockPrice(stockPrice Price) error {

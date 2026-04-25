@@ -58,8 +58,17 @@ func GetHtmlStringFromUrl(targetURL string) (string, error) {
 	})
 
 	err := chromedp.Run(ctx,
+		// Block ad/analytics domains before navigating so their slow responses
+		// don't hold up the page's load event (e.g. DoubleClick trackers).
+		network.Enable(),
+		network.SetBlockedURLs([]string{
+			"*doubleclick.net*",
+			"*googlesyndication.com*",
+			"*googletagmanager.com*",
+			"*google-analytics.com*",
+		}),
 		chromedp.Navigate(targetURL),
-		chromedp.Sleep(6*time.Second), // let redirects/challenge scripts settle
+		chromedp.Sleep(6*time.Second), // let JS redirects/challenge scripts settle
 		chromedp.OuterHTML("html", &html),
 	)
 	if err != nil {

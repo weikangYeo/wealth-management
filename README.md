@@ -24,17 +24,25 @@
     - [ ] Item by Item CRUD
     - [ ] Stock
       - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
-      - [ ] Scrape Stock Price
+      - [ ] Aggregated all stock info
+      - [x] Scrape Stock Price
+        - [x] Scrape Stock Price from bursa
+        - [x] Scrape Stock Price from klse screener
+        - [x] set Scrape Stock Price from klse screener 
+      - [ ] Scrape Dividend info, so dont have to manual insert dividend every time
+        - [ ] add withholding tax if it is REIT
       - [ ] Dividend Input fields (Stepper component)
       - [ ] Dividend Graph over the years
       - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
       - [ ] GET Stock API to include DY or other aggregated info I interested the most 
       - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
+- [ ] Onboard Data (to this system) and back up
 - [ ] Watch list
 - [ ] Revamp UI 
 - [ ] "Fun" Part - Web Scrapper
     - [ ] Funds Info & Price
-    - [ ] Stock info & Price
+    - [ ] Stock info
+    - [X] Stock info & Price
     - [X] Gold Price
     - [ ] News that might relate
     - [ ] The ETL process of web scraped data and how to process it
@@ -44,12 +52,19 @@
 
 ## Note for future self
 - Current/Next item to work with
-  - Stock Detail navigation
-    - Stock Detail - get stock summary
-  - Stock Price Scrape
+  - Stock Detail 
+    - Stock Detail - Add Dividend transaction
+      - todo: Test post dividends API
+      - todo: Test GET dividends API
+      - todo: Test GET dividends page
+      - todo: remove netAmount and GrossAmount from request 
+      - todo: GrossAmount compute dynamically and show in UI, like net amount 
+      - todo: withHolding tax change to percentage type (and show label as %), format it to 0.xx before send to BE 
+  - Fill in stock transactions and dividend (manually, for pass record) 
+  - Stock Detail - get stock summary
   - Stock metrics calculation
-  - Stock price scraper
-
+  - Stock price scraper change to klse screener
+  - Stock dividend scraper (test)
 ### File structure 
 
 this repo is using "Package by feature" way to seperate packages.

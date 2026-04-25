@@ -105,9 +105,9 @@ func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]Txn, err
 	var goldTxns []Txn
 
 	for _, record := range rows {
-		dateStr := record[indexByHeaderMap["TxnDate"]]
+		dateStr := record[indexByHeaderMap["exDate"]]
 		if dateStr == "" {
-			log.Println("No TxnDate, consider as dirty data, skipping this row")
+			log.Println("No exDate, consider as dirty data, skipping this row")
 			continue
 		}
 		// golang date format design is just nut, the layout MUST follow their references example value
@@ -163,7 +163,7 @@ func identifyHeader(csvReader *csv.Reader) (map[string]int, error) {
 		} else if header == "Purchase Unit Price" {
 			key = "UnitPrice"
 		} else if header == "Investment Date" {
-			key = "TxnDate"
+			key = "exDate"
 		} else if header == "Gold (Gram)" {
 			key = "Gram"
 		} else if header == "Status" {

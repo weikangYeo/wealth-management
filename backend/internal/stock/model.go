@@ -35,9 +35,24 @@ type TxnRequest struct {
 }
 
 type Dividend struct {
-	StockName string      `json:"stockName"`
-	TxnDate   time.Time   `json:"txnDate"`
-	Amount    apd.Decimal `json:"amount"`
+	StockName       string      `json:"stockName"`
+	ExDate          time.Time   `json:"exDate"`
+	PaymentDate     time.Time   `json:"paymentDate"`
+	StockUnit       apd.Decimal `json:"stockUnit"`
+	DividendPerUnit apd.Decimal `json:"dividendPerUnit"`
+	TaxPercentage   apd.Decimal `json:"taxPercentage"`
+	GrossAmount     apd.Decimal `json:"grossAmount"`
+	NetAmount       apd.Decimal `json:"netAmount"`
+	Remark          string      `json:"remark"`
+}
+
+type DividendRequest struct {
+	ExDate          time.Time   `json:"exDate"`
+	PaymentDate     time.Time   `json:"paymentDate"`
+	StockUnit       apd.Decimal `json:"stockUnit"`
+	DividendPerUnit apd.Decimal `json:"dividendPerUnit"`
+	TaxPercentage   apd.Decimal `json:"taxPercentage"`
+	Remark          string      `json:"remark"`
 }
 
 type Price struct {
@@ -47,7 +62,11 @@ type Price struct {
 }
 
 // UnmarshalJSON Custom JSON unmarshaling for date parsing,
-// auto called when ShouldBindJSON called
+// auto called when ShouldBindJSON called.
+// Go principle: types own their behavior. The standard library itself does this — time.Time
+// implements MarshalJSON/UnmarshalJSON. When a type has a non-trivial wire format, the
+// conversion belongs to the type, not the caller.
+// with this, handler will only concern about business logic (separate of concern)
 func (t *TxnRequest) UnmarshalJSON(data []byte) error {
 	type Alias TxnRequest
 	aux := &struct {
@@ -101,8 +120,67 @@ func (t *Txn) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// CalculateTotalPrice computes totalPrice = (unitPrice * unit) + brokerFee
-func (t *Txn) CalculateTotalPrice(ctx *apd.Context) error {
+func (d *DividendRequest) UnmarshalJSON(data []byte) error {
+	type Alias DividendRequest
+	aux := &struct {
+		ExDate          string      `json:"exDate"`
+		PaymentDate     string      `json:"paymentDate"`
+		StockUnit       json.Number `json:"stockUnit"`
+		DividendPerUnit json.Number `json:"dividendPerUnit"`
+		Tax             json.Number `json:"tax"`
+		GrossAmount     json.Number `json:"grossAmount"`
+		NetAmount       json.Number `json:"netAmount"`
+		*Alias
+	}{
+		Alias: (*Alias)(d),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	var err error
+	if d.ExDate, err = time.Parse("2006-01-02", aux.ExDate); err != nil {
+		return err
+	}
+	if d.PaymentDate, err = time.Parse("2006-01-02", aux.PaymentDate); err != nil {
+		return err
+	}
+	ctx := apd.BaseContext
+	for _, f := range []struct {
+		dst *apd.Decimal
+		src json.Number
+	}{
+		{&d.StockUnit, aux.StockUnit},
+		{&d.DividendPerUnit, aux.DividendPerUnit},
+		{&d.TaxPercentage, aux.Tax},
+	} {
+		if _, _, err := ctx.SetString(f.dst, f.src.String()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (d *Dividend) MarshalJSON() ([]byte, error) {
+	type Alias Dividend
+	return json.Marshal(&struct {
+		StockUnit       json.Number `json:"stockUnit"`
+		DividendPerUnit json.Number `json:"dividendPerUnit"`
+		TaxPercentage   json.Number `json:"TaxPercentage"`
+		GrossAmount     json.Number `json:"grossAmount"`
+		NetAmount       json.Number `json:"netAmount"`
+		*Alias
+	}{
+		StockUnit:       json.Number(d.StockUnit.String()),
+		DividendPerUnit: json.Number(d.DividendPerUnit.String()),
+		TaxPercentage:   json.Number(d.TaxPercentage.String()),
+		GrossAmount:     json.Number(d.GrossAmount.String()),
+		NetAmount:       json.Number(d.NetAmount.String()),
+		Alias:           (*Alias)(d),
+	})
+}
+
+// CalculateStockTxnTotalPrice computes totalPrice = (unitPrice * unit) + brokerFee
+func (t *Txn) CalculateStockTxnTotalPrice(ctx *apd.Context) error {
 	totalPrice := new(apd.Decimal)
 
 	// Multiply unitPrice * unit
@@ -116,5 +194,27 @@ func (t *Txn) CalculateTotalPrice(ctx *apd.Context) error {
 	}
 
 	t.TotalPrice = *totalPrice
+	return nil
+}
+
+func (dividend *Dividend) CalculateDividendTotalAmount(ctx *apd.Context) error {
+	grossAmount := new(apd.Decimal)
+
+	if _, err := ctx.Mul(grossAmount, &dividend.DividendPerUnit, &dividend.StockUnit); err != nil {
+		return err
+	}
+
+	taxAmount := new(apd.Decimal)
+	if _, err := ctx.Mul(taxAmount, &dividend.TaxPercentage, &dividend.GrossAmount); err != nil {
+		return err
+	}
+
+	netAmount := new(apd.Decimal)
+	if _, err := ctx.Sub(netAmount, grossAmount, taxAmount); err != nil {
+		return err
+	}
+
+	dividend.NetAmount = *netAmount
+	dividend.GrossAmount = *grossAmount
 	return nil
 }

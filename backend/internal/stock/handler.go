@@ -91,12 +91,41 @@ func (handler *handler) createStockTxn(context *gin.Context) {
 
 	// Calculate total price
 	decimalCtx := apd.BaseContext.WithPrecision(12)
-	if err := txn.CalculateTotalPrice(decimalCtx); err != nil {
+	if err := txn.CalculateStockTxnTotalPrice(decimalCtx); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
 		return
 	}
 
 	if err := handler.stockRepo.createStockTxn(txn); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusCreated, gin.H{"status": "created"})
+}
+
+func (handler *handler) createStockDividend(context *gin.Context) {
+	var req DividendRequest
+	if err := context.ShouldBindJSON(&req); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	stockName := context.Param("stockName")
+
+	dividend := Dividend{
+		StockName:       stockName,
+		ExDate:          req.ExDate,
+		PaymentDate:     req.PaymentDate,
+		StockUnit:       req.StockUnit,
+		DividendPerUnit: req.DividendPerUnit,
+		TaxPercentage:   req.TaxPercentage,
+		Remark:          req.Remark,
+	}
+	decimalCtx := apd.BaseContext.WithPrecision(12)
+	if err := dividend.CalculateDividendTotalAmount(decimalCtx); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
+		return
+	}
+	if err := handler.stockRepo.createDividend(dividend); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
