@@ -97,8 +97,8 @@ func (r repository) createStockTxn(stockTxn Txn) error {
 	return tx.Commit()
 }
 
-func (r repository) getAllDividend() ([]Dividend, error) {
-	rows, err := r.db.Query("SELECT stock_name, ex_date, payment_date, stock_unit, dividend_per_unit, tax, gross_amount, net_amount, remark FROM stock_dividend")
+func (r repository) getDividendByStockName(stockName string) ([]Dividend, error) {
+	rows, err := r.db.Query("SELECT stock_name, ex_date, payment_date, stock_unit, dividend_per_unit, tax, gross_amount, net_amount, remark FROM stock_dividend where stock_name = ? order by ex_date desc", stockName)
 	if err != nil {
 		return nil, err
 	}

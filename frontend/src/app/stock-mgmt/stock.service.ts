@@ -1,6 +1,13 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {CreateStockModel, PaginatedResponse, StockOverview, StockTxn} from './stock.model';
+import {
+  CreateDividendModel,
+  CreateStockModel,
+  Dividend,
+  PaginatedResponse,
+  StockOverview,
+  StockTxn
+} from './stock.model';
 
 @Injectable({providedIn: 'root'})
 export class StockService {
@@ -25,5 +32,13 @@ export class StockService {
 
   createTransaction(stockName: string, txn: StockTxn) {
     return this.http.post(this.STOCK_DOMAIN_API_URL + `/${stockName}/transactions`, txn);
+  }
+
+  createDividend(stockName: string, dividend: CreateDividendModel) {
+    return this.http.post(this.STOCK_DOMAIN_API_URL + `/${stockName}/dividends`, dividend);
+  }
+
+  getDividends(stockName: string) {
+    return this.http.get<PaginatedResponse<Dividend>>(this.STOCK_DOMAIN_API_URL + `/${stockName}/dividends`);
   }
 }

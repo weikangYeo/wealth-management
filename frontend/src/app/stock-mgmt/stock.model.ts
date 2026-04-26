@@ -25,7 +25,28 @@ export interface StockTxn {
   unit: number;
   unitPrice: number;
   brokerFee: number;
-  totalPrice: number;
+  totalPrice?: number;
+  remark: string;
+}
+
+export interface CreateDividendModel {
+  exDate: string;
+  paymentDate: string;
+  stockUnit: number;
+  dividendPerUnit: number;
+  taxPercentage: number;
+  remark: string;
+}
+
+export interface Dividend {
+  stockName: string;
+  exDate: string;
+  paymentDate: string;
+  stockUnit: number;
+  dividendPerUnit: number;
+  taxPercentage: number;
+  grossAmount: number;
+  netAmount: number;
   remark: string;
 }
 

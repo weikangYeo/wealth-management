@@ -1,8 +1,11 @@
 <div class="mx-auto w-full max-w-6xl space-y-5">
 
   <!-- Back link -->
-  <a routerLink="/stocks" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+  <a routerLink="/stocks"
+     class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
     Back to Stocks
   </a>
 
@@ -13,7 +16,8 @@
         <p class="text-xs font-bold uppercase tracking-widest text-indigo-400">{{ stockOverview().stockName }}</p>
         <h2 class="text-xl font-bold text-white mt-0.5">{{ stockOverview().displayName }}</h2>
       </div>
-      <span class="bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-3 py-1 rounded-full text-xs font-semibold">
+      <span
+        class="bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-3 py-1 rounded-full text-xs font-semibold">
         DY {{ stockOverview().dividendYield | number:'1.2-2' }}%
       </span>
     </div>
@@ -69,7 +73,8 @@
           [class.text-slate-500]="addTab() !== 'transaction'"
           [class.hover:text-slate-300]="addTab() !== 'transaction'"
           (click)="addTab.set('transaction')"
-        >Transaction</button>
+        >Transaction
+        </button>
         <button
           type="button"
           class="px-4 py-2 text-sm font-semibold transition-colors rounded-t-lg"
@@ -79,7 +84,8 @@
           [class.text-slate-500]="addTab() !== 'dividend'"
           [class.hover:text-slate-300]="addTab() !== 'dividend'"
           (click)="addTab.set('dividend')"
-        >Dividend</button>
+        >Dividend
+        </button>
       </div>
 
       <!-- Transaction Form -->
@@ -88,14 +94,14 @@
           <div>
             <label class="block text-xs text-slate-400 mb-1.5">Transaction Date *</label>
             <input type="date" #txnDate
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]" />
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]"/>
           </div>
 
           <div class="grid gap-3 sm:grid-cols-2">
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Type *</label>
               <select #txnType
-                class="w-full bg-[#1a1f35] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+                      class="w-full bg-[#1a1f35] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
                 <option value="BUY">BUY</option>
                 <option value="SELL">SELL</option>
               </select>
@@ -103,7 +109,7 @@
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Unit *</label>
               <input type="number" #unit min="0" step="0.0001"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
             </div>
           </div>
 
@@ -111,20 +117,20 @@
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Unit Price (RM) *</label>
               <input type="number" #unitPrice min="0" step="0.01"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Broker Fee (RM)</label>
               <input type="number" #brokerFee min="0" step="0.01"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
             </div>
           </div>
 
           <div>
             <label class="block text-xs text-slate-400 mb-1.5">Remark</label>
             <textarea #remark rows="2"
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
-              placeholder="Optional notes"></textarea>
+                      class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
+                      placeholder="Optional notes"></textarea>
           </div>
 
           <button
@@ -140,54 +146,80 @@
       <!-- Dividend Form -->
       @if (addTab() === 'dividend') {
         <div class="space-y-3">
-          <div class="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-xs font-semibold text-amber-400">
-            Dividend tab is a mock UI for now.
+          <div
+            class="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-xs font-semibold text-amber-400">
+            This is just to fill up history dividend received due to some history stock transaction date is not
+            accurately logged, causing variance in actual P&L.
           </div>
-
-          <div>
-            <label class="block text-xs text-slate-400 mb-1.5">Ex-Date *</label>
-            <input type="date"
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]" />
+          <div
+            class="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-xs font-semibold text-amber-400">
+            New dividend will always created and computed after scraper ran.
           </div>
 
           <div class="grid gap-3 sm:grid-cols-2">
+
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5">Ex-Date *</label>
+              <input type="date"
+                     #exDateInput (input)="exDate.set(exDateInput.value)"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]"/>
+            </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Pay Date *</label>
               <input type="date"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]" />
+                     #payDateInput (input)="paymentDate.set(payDateInput.value)"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]"/>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <!-- todo preload with existing unit, and user fill free to edit              -->
+              <label class="block text-xs text-slate-400 mb-1.5">Unit (RM) *</label>
+              <input type="number" min="0" step="0.0001"
+                     #unit (input)="stockUnit.set(+unit.value)"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Dividend / Unit (RM) *</label>
               <input type="number" min="0" step="0.0001"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+                     #dividendPerUnitInput (input)="dividendPerUnit.set(+dividendPerUnitInput.value)"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
             </div>
           </div>
 
           <div class="grid gap-3 sm:grid-cols-2">
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Withholding Tax (RM)</label>
-              <input type="number" min="0" step="0.01"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+              <input type="number" min="0" step="0.01" #tax (input)="withHoldingTax.set(+tax.value)"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1.5">Gross Amount (RM)</label>
-              <input type="number" min="0" step="0.01"
-                class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all" />
+              <input type="number" min="0" step="0.01" disabled
+                     [value]="grossAmount()"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white opacity-60 cursor-not-allowed"/>
             </div>
           </div>
 
           <div>
             <label class="block text-xs text-slate-400 mb-1.5">Remark</label>
             <textarea rows="2"
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
-              placeholder="Optional notes"></textarea>
+                      #remarkInput (input)="remark.set(remarkInput.value)"
+                      class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
+                      placeholder="Optional notes"></textarea>
+          </div>
+
+          <div
+            class="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-xs font-semibold text-amber-400">
+            Net Amount: {{ netDividendAmount() | number:'1.2-2' }}
           </div>
 
           <button
             type="button"
+            (click)="addDividend()"
             class="w-full py-2.5 bg-white/8 hover:bg-white/12 border border-white/10 text-white text-sm font-semibold rounded-xl transition-all"
           >
-            Save Dividend (Mock)
+            Save Dividend
           </button>
         </div>
       }
@@ -200,7 +232,8 @@
           <h3 class="text-sm font-bold text-white">Activity Preview</h3>
           <p class="text-xs text-slate-500 mt-0.5">Transaction and dividend history.</p>
         </div>
-        <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">
+        <span
+          class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">
           Total: RM {{ totalTxnValue() | number:'1.2-2' }}
         </span>
       </div>
@@ -215,7 +248,8 @@
           [class.border-indigo-400]="listTab() === 'transaction'"
           [class.text-slate-500]="listTab() !== 'transaction'"
           (click)="listTab.set('transaction')"
-        >Transaction</button>
+        >Transaction
+        </button>
         <button
           type="button"
           class="px-4 py-3 text-sm font-semibold transition-colors"
@@ -224,7 +258,8 @@
           [class.border-indigo-400]="listTab() === 'dividend'"
           [class.text-slate-500]="listTab() !== 'dividend'"
           (click)="listTab.set('dividend')"
-        >Dividend</button>
+        >Dividend
+        </button>
       </div>
 
       <!-- Transaction Table -->
@@ -232,34 +267,34 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
-                <th class="text-left px-5 py-3 font-semibold bg-white/3">Date</th>
-                <th class="text-center px-4 py-3 font-semibold bg-white/3">Type</th>
-                <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit</th>
-                <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit Price</th>
-                <th class="text-right px-4 py-3 font-semibold bg-white/3">Fee</th>
-                <th class="text-right px-5 py-3 font-semibold bg-white/3">Total</th>
-              </tr>
+            <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
+              <th class="text-left px-5 py-3 font-semibold bg-white/3">Date</th>
+              <th class="text-center px-4 py-3 font-semibold bg-white/3">Type</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit Price</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Fee</th>
+              <th class="text-right px-5 py-3 font-semibold bg-white/3">Total</th>
+            </tr>
             </thead>
             <tbody class="divide-y divide-white/5">
               @for (txn of transactions(); track txn.id) {
                 <tr class="glass-row transition-colors">
                   <td class="px-5 py-3.5 text-xs text-slate-400">{{ txn.txnDate | date:'yyyy-MM-dd' }}</td>
                   <td class="px-4 py-3.5 text-center">
-                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold"
-                      [class.bg-emerald-500\/15]="txn.txnType === 'BUY'"
-                      [class.text-emerald-400]="txn.txnType === 'BUY'"
-                      [class.border]="true"
-                      [class.border-emerald-500\/25]="txn.txnType === 'BUY'"
-                      [class.bg-rose-500\/15]="txn.txnType === 'SELL'"
-                      [class.text-rose-400]="txn.txnType === 'SELL'"
-                      [class.border-rose-500\/25]="txn.txnType === 'SELL'"
+                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+                          [class.bg-emerald-500]="txn.txnType === 'BUY'"
+                          [class.border]="true"
+                          [class.border-emerald-500]="txn.txnType === 'BUY'"
+                          [class.bg-rose-500]="txn.txnType === 'SELL'"
+                          [class.border-rose-500]="txn.txnType === 'SELL'"
                     >{{ txn.txnType }}</span>
                   </td>
-                  <td class="px-4 py-3.5 text-right text-xs text-slate-300">{{ txn.unit | number:'1.2-4' }}</td>
+                  <td class=" px-4 py-3.5 text-right text-xs text-slate-300">{{ txn.unit | number:'1.2-4' }}</td>
                   <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{ txn.unitPrice | number:'1.2-2' }}</td>
                   <td class="px-4 py-3.5 text-right text-xs text-slate-500">RM {{ txn.brokerFee | number:'1.2-2' }}</td>
-                  <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">RM {{ txn.totalPrice | number:'1.2-2' }}</td>
+                  <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">
+                    RM {{ txn.totalPrice | number:'1.2-2' }}
+                  </td>
                 </tr>
               } @empty {
                 <tr>
@@ -276,27 +311,34 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
-                <th class="text-left px-5 py-3 font-semibold bg-white/3">Ex-Date</th>
-                <th class="text-left px-4 py-3 font-semibold bg-white/3">Pay Date</th>
-                <th class="text-right px-4 py-3 font-semibold bg-white/3">Div / Unit</th>
-                <th class="text-right px-4 py-3 font-semibold bg-white/3">Gross</th>
-                <th class="text-right px-4 py-3 font-semibold bg-white/3">Tax</th>
-                <th class="text-right px-5 py-3 font-semibold bg-white/3">Net</th>
-              </tr>
+            <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
+              <th class="text-left px-5 py-3 font-semibold bg-white/3">Ex-Date</th>
+              <th class="text-left px-4 py-3 font-semibold bg-white/3">Pay Date</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Div / Unit</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Gross</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Tax %</th>
+              <th class="text-right px-5 py-3 font-semibold bg-white/3">Net</th>
+              <th class="text-right px-5 py-3 font-semibold bg-white/3">Remark</th>
+            </tr>
             </thead>
             <tbody class="divide-y divide-white/5">
-              <tr class="glass-row">
-                <td class="px-5 py-3.5 text-xs text-slate-400">2024-12-30</td>
-                <td class="px-4 py-3.5 text-xs text-slate-400">2025-01-15</td>
-                <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM 0.0300</td>
-                <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM 120.00</td>
-                <td class="px-4 py-3.5 text-right text-xs text-slate-500">RM 6.00</td>
-                <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">RM 114.00</td>
-              </tr>
-              <tr>
-                <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-500">Dividend data will appear here.</td>
-              </tr>
+              @for (dividend of dividends(); track $index) {
+                <tr class="glass-row">
+                  <td class="px-5 py-3.5 text-xs text-slate-400">{{dividend.exDate | date:'yyyy-MM-dd'}}</td>
+                  <td class="px-4 py-3.5 text-xs text-slate-400">{{dividend.paymentDate | date:'yyyy-MM-dd'}}</td>
+                  <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{dividend.dividendPerUnit | number:'1.2-2'}}</td>
+                  <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{dividend.stockUnit | number:'1.2-2'}}</td>
+                  <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{dividend.grossAmount | number:'1.2-2'}}</td>
+                  <td class="px-4 py-3.5 text-right text-xs text-slate-500">{{dividend.taxPercentage * 100 | number:'1.2-2'}} %</td>
+                  <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">RM {{dividend.netAmount | number:'1.2-2'}}</td>
+                  <td class="px-5 py-3.5 text-xs text-slate-400">{{dividend.remark}}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="px-5 py-8 text-center text-sm text-slate-500">No Dividend added yet.</td>
+                </tr>
+              }
             </tbody>
           </table>
         </div>

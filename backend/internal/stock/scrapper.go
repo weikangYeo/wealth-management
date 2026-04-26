@@ -100,6 +100,7 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 			Remark:          kd.Remark,
 		}
 		ctx := apd.BaseContext
+		ctx.Precision = 14 // match DECIMAL(14,4): enough headroom, results rounded to 4dp by DB
 		if err := dividend.CalculateDividendTotalAmount(&ctx); err != nil {
 			log.Printf("Error calculating dividend for %s ex %s: %v", s.StockName, kd.ExDate.Format("2006-01-02"), err)
 			continue

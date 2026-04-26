@@ -127,7 +127,7 @@ func (d *DividendRequest) UnmarshalJSON(data []byte) error {
 		PaymentDate     string      `json:"paymentDate"`
 		StockUnit       json.Number `json:"stockUnit"`
 		DividendPerUnit json.Number `json:"dividendPerUnit"`
-		Tax             json.Number `json:"tax"`
+		TaxPercentage   json.Number `json:"taxPercentage"`
 		GrossAmount     json.Number `json:"grossAmount"`
 		NetAmount       json.Number `json:"netAmount"`
 		*Alias
@@ -151,7 +151,7 @@ func (d *DividendRequest) UnmarshalJSON(data []byte) error {
 	}{
 		{&d.StockUnit, aux.StockUnit},
 		{&d.DividendPerUnit, aux.DividendPerUnit},
-		{&d.TaxPercentage, aux.Tax},
+		{&d.TaxPercentage, aux.TaxPercentage},
 	} {
 		if _, _, err := ctx.SetString(f.dst, f.src.String()); err != nil {
 			return err
@@ -160,7 +160,7 @@ func (d *DividendRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (d *Dividend) MarshalJSON() ([]byte, error) {
+func (dividend *Dividend) MarshalJSON() ([]byte, error) {
 	type Alias Dividend
 	return json.Marshal(&struct {
 		StockUnit       json.Number `json:"stockUnit"`
@@ -170,12 +170,12 @@ func (d *Dividend) MarshalJSON() ([]byte, error) {
 		NetAmount       json.Number `json:"netAmount"`
 		*Alias
 	}{
-		StockUnit:       json.Number(d.StockUnit.String()),
-		DividendPerUnit: json.Number(d.DividendPerUnit.String()),
-		TaxPercentage:   json.Number(d.TaxPercentage.String()),
-		GrossAmount:     json.Number(d.GrossAmount.String()),
-		NetAmount:       json.Number(d.NetAmount.String()),
-		Alias:           (*Alias)(d),
+		StockUnit:       json.Number(dividend.StockUnit.String()),
+		DividendPerUnit: json.Number(dividend.DividendPerUnit.String()),
+		TaxPercentage:   json.Number(dividend.TaxPercentage.String()),
+		GrossAmount:     json.Number(dividend.GrossAmount.String()),
+		NetAmount:       json.Number(dividend.NetAmount.String()),
+		Alias:           (*Alias)(dividend),
 	})
 }
 

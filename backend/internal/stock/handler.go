@@ -55,6 +55,17 @@ func (handler *handler) getAllStockTransactions(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"content": stocks})
 }
 
+func (handler *handler) getDividendsByStockName(context *gin.Context) {
+	stockName := context.Param("stockName")
+	dividends, err := handler.stockRepo.getDividendByStockName(stockName)
+	if err != nil {
+		log.Printf("Error getting dividends: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"content": dividends})
+}
+
 func (handler *handler) createStock(context *gin.Context) {
 	var req Stock
 	if err := context.ShouldBindJSON(&req); err != nil {
