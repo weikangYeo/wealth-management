@@ -20,7 +20,7 @@ export class StockDetail {
   protected stockOverview = signal<StockOverview>({
     stockName: '',
     displayName: '',
-    bursaStockId: 0,
+    bursaStockId: '',
     unit: 0,
     averagePrice: 0,
     realizedGainLoss: 0,

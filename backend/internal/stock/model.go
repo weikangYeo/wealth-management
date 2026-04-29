@@ -10,7 +10,7 @@ import (
 type Stock struct {
 	StockName    string `json:"stockName"`
 	DisplayName  string `json:"displayName"`
-	BursaStockId int    `json:"bursaStockId"`
+	BursaStockId string `json:"bursaStockId"`
 }
 
 type Txn struct {

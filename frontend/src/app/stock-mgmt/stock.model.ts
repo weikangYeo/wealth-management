@@ -4,7 +4,7 @@ export type TxnType = 'BUY' | 'SELL';
 export interface CreateStockModel {
   stockName: string;
   displayName: string;
-  bursaStockId: number;
+  bursaStockId: string;
 }
 
 export interface StockOverview extends CreateStockModel {

@@ -29,9 +29,9 @@
             - [x] Scrape Stock Price from bursa
             - [x] Scrape Stock Price from klse screener
             - [x] set Scrape Stock Price from klse screener
-        - [ ] Scrape Dividend info, so dont have to manual insert dividend every time
+        - [X] Scrape Dividend info, so dont have to manual insert dividend every time
             - [ ] add withholding tax if it is REIT
-        - [ ] Dividend Input fields (Stepper component)
+        - [X] Dividend Input fields (Stepper component)
         - [ ] Dividend Graph over the years
         - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
         - [ ] GET Stock API to include DY or other aggregated info I interested the most
@@ -53,7 +53,7 @@
 ## Note for future self
 
 - Current/Next item to work with
-    - Fill in stock transactions and dividend (manually, for pass record)
+    - Fill in stock dividend (via scrapper and back trace orginal txn date via ex Date)
     - Stock Detail - get stock summary
     - Stock metrics calculation
 

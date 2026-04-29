@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 	"wealth-management/internal/platform/database"
@@ -41,7 +40,7 @@ func ScrapeStockLastDonePrice() {
 }
 
 func scrapeStockData(stockRepo *repository, s Stock) {
-	klseURL := os.Getenv("KLSE_STOCK_BASE_URL") + strconv.Itoa(s.BursaStockId)
+	klseURL := os.Getenv("KLSE_STOCK_BASE_URL") + s.BursaStockId
 	html, err := scrape.GetHtmlStringFromUrl(klseURL)
 	if err != nil {
 		log.Printf("KLSE scrape failed for %s: %v, falling back to old source", s.StockName, err)
@@ -112,7 +111,7 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 }
 
 func scrapeAndSavePriceFromOldSource(stockRepo *repository, s Stock) {
-	targetURL := os.Getenv("STOCK_URL") + "?stock_code=" + strconv.Itoa(s.BursaStockId)
+	targetURL := os.Getenv("STOCK_URL") + "?stock_code=" + s.BursaStockId
 	html, err := scrape.GetHtmlStringFromUrl(targetURL)
 	if err != nil {
 		log.Printf("Old source scrape failed for %s: %v", s.StockName, err)

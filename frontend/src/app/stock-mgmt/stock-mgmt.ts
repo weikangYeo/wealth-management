@@ -37,7 +37,7 @@ export class StockMgmt {
     const draft: CreateStockModel = {
       stockName: stockName,
       displayName: displayName,
-      bursaStockId: Number(bursaStockId),
+      bursaStockId: bursaStockId,
     }
     this.stockService.createStock(draft).subscribe({
       next: () => {
