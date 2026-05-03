@@ -27,6 +27,9 @@
         - [ ] Aggregated all stock info
           - [x] total dividends
           - [ ] DY
+          - [ ] unreliazed return
+          - [ ] reliazed return
+          - [ ] anuallized return
         - [x] Scrape Stock Price
             - [x] Scrape Stock Price from bursa
             - [x] Scrape Stock Price from klse screener
@@ -40,6 +43,7 @@
         - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
 - [ ] Onboard Data (to this system) and back up
 - [ ] Watch list
+- [ ] Performance enhancement, read table for aggregated data?
 - [ ] Revamp UI
 - [ ] "Fun" Part - Web Scrapper
     - [ ] Funds Info & Price
@@ -54,9 +58,7 @@
 
 ## Note for future self
 
-- Current/Next item to work with
-    - Stock Detail - get stock summary
-    - Stock metrics calculation
+- Funds module
 
 ### File structure
 
