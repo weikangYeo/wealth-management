@@ -3,6 +3,7 @@ package stock
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/cockroachdb/apd/v3"
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,42 @@ func (handler *handler) getStockOverview(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	context.JSON(http.StatusOK, stock)
+	dividends, err := handler.stockRepo.getDividendByStockName(stock.StockName)
+	if err != nil {
+		log.Printf("Error getting dividends: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	totalByYear := make(map[int]*apd.Decimal)
+	decimalCtx := apd.BaseContext.WithPrecision(14)
+	// sum dividend per year
+	for _, div := range dividends {
+		year := div.ExDate.Year()
+		if _, isExists := totalByYear[year]; !isExists {
+			totalByYear[year] = apd.New(0, 0)
+		}
+		if _, err := decimalCtx.Add(totalByYear[year], totalByYear[year], &div.NetAmount); err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	var dividendOverviews []DividendOverview
+	for year, total := range totalByYear {
+		dividendOverviews = append(dividendOverviews, DividendOverview{
+			Year:          strconv.Itoa(year),
+			TotalDividend: *total,
+		})
+	}
+
+	overview := StockOverview{
+		StockName:         stock.StockName,
+		DisplayName:       stock.DisplayName,
+		BursaStockId:      stock.BursaStockId,
+		DividendOverviews: dividendOverviews,
+	}
+
+	context.JSON(http.StatusOK, overview)
 }
 
 func (handler *handler) getAllStockTransactions(context *gin.Context) {
@@ -101,7 +137,7 @@ func (handler *handler) createStockTxn(context *gin.Context) {
 	}
 
 	// Calculate total price
-	decimalCtx := apd.BaseContext.WithPrecision(12)
+	decimalCtx := apd.BaseContext.WithPrecision(14)
 	if err := txn.CalculateStockTxnTotalPrice(decimalCtx); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
 		return
@@ -112,6 +148,40 @@ func (handler *handler) createStockTxn(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"status": "created"})
+}
+
+func (handler *handler) updateStockTxn(context *gin.Context) {
+	stockName := context.Param("stockName")
+	txnId := context.Param("txnId")
+	var req TxnRequest
+	if err := context.ShouldBindJSON(&req); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	txn := Txn{
+		ID:        txnId,
+		StockName: stockName,
+		TxnDate:   req.TxnDate,
+		Unit:      req.Unit,
+		UnitPrice: req.UnitPrice,
+		BrokerFee: req.BrokerFee,
+		TxnType:   req.TxnType,
+		Remark:    req.Remark,
+	}
+
+	// Calculate total price
+	decimalCtx := apd.BaseContext.WithPrecision(14)
+	if err := txn.CalculateStockTxnTotalPrice(decimalCtx); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
+		return
+	}
+
+	if err := handler.stockRepo.updateStockTxn(txn); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusCreated, gin.H{"status": "updated"})
 }
 
 func (handler *handler) createStockDividend(context *gin.Context) {
@@ -131,7 +201,7 @@ func (handler *handler) createStockDividend(context *gin.Context) {
 		TaxPercentage:   req.TaxPercentage,
 		Remark:          req.Remark,
 	}
-	decimalCtx := apd.BaseContext.WithPrecision(12)
+	decimalCtx := apd.BaseContext.WithPrecision(14)
 	if err := dividend.CalculateDividendTotalAmount(decimalCtx); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
 		return
@@ -141,4 +211,33 @@ func (handler *handler) createStockDividend(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"status": "created"})
+}
+
+func (handler *handler) updateStockDividend(context *gin.Context) {
+	var req DividendRequest
+	if err := context.ShouldBindJSON(&req); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	stockName := context.Param("stockName")
+
+	dividend := Dividend{
+		StockName:       stockName,
+		ExDate:          req.ExDate,
+		PaymentDate:     req.PaymentDate,
+		StockUnit:       req.StockUnit,
+		DividendPerUnit: req.DividendPerUnit,
+		TaxPercentage:   req.TaxPercentage,
+		Remark:          req.Remark,
+	}
+	decimalCtx := apd.BaseContext.WithPrecision(14)
+	if err := dividend.CalculateDividendTotalAmount(decimalCtx); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
+		return
+	}
+	if err := handler.stockRepo.updateDividend(dividend); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusCreated, gin.H{"status": "updated"})
 }

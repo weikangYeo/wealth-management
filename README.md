@@ -25,12 +25,14 @@
     - [ ] Stock
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info
+          - [x] total dividends
+          - [ ] DY
         - [x] Scrape Stock Price
             - [x] Scrape Stock Price from bursa
             - [x] Scrape Stock Price from klse screener
             - [x] set Scrape Stock Price from klse screener
         - [X] Scrape Dividend info, so dont have to manual insert dividend every time
-            - [ ] add withholding tax if it is REIT
+            - [X] add withholding tax if it is REIT
         - [X] Dividend Input fields (Stepper component)
         - [ ] Dividend Graph over the years
         - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
@@ -53,7 +55,6 @@
 ## Note for future self
 
 - Current/Next item to work with
-    - Fill in stock dividend (via scrapper and back trace orginal txn date via ex Date)
     - Stock Detail - get stock summary
     - Stock metrics calculation
 

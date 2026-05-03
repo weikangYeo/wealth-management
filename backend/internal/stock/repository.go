@@ -97,6 +97,23 @@ func (r repository) createStockTxn(stockTxn Txn) error {
 	return tx.Commit()
 }
 
+func (r repository) updateStockTxn(stockTxn Txn) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("UPDATE stock_txn SET txn_date=?, unit=?, unit_price=?, broker_fee=?, total_price=?, txn_type=?, remark=? WHERE id=? and stock_name =?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	if _, err := stmt.Exec(stockTxn.TxnDate, stockTxn.Unit, stockTxn.UnitPrice, stockTxn.BrokerFee, stockTxn.TotalPrice, stockTxn.TxnType, stockTxn.Remark, stockTxn.ID, stockTxn.StockName); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 func (r repository) getDividendByStockName(stockName string) ([]Dividend, error) {
 	rows, err := r.db.Query("SELECT stock_name, ex_date, payment_date, stock_unit, dividend_per_unit, tax, gross_amount, net_amount, remark FROM stock_dividend where stock_name = ? order by ex_date desc", stockName)
 	if err != nil {
@@ -138,11 +155,30 @@ func (r repository) createDividend(dividend Dividend) error {
 	return tx.Commit()
 }
 
-func (r repository) existsDividend(stockName string, exDate time.Time) (bool, error) {
+func (r repository) updateDividend(dividend Dividend) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("UPDATE stock_dividend SET ex_date = ?, payment_date = ?, stock_unit = ?, dividend_per_unit = ?, tax = ?, grass_amount = ?, net_amount = ?, remark = ? WHERE stock_name = ? ")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	if _, err := stmt.Exec(dividend.ExDate, dividend.PaymentDate,
+		dividend.StockUnit, dividend.DividendPerUnit, dividend.TaxPercentage,
+		dividend.GrossAmount, dividend.NetAmount, dividend.Remark, dividend.StockName); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r repository) existsDividend(stockName string, exDate time.Time, dividendPerUnit apd.Decimal) (bool, error) {
 	var count int
 	err := r.db.QueryRow(
-		"SELECT COUNT(*) FROM stock_dividend WHERE stock_name = ? AND ex_date = ?",
-		stockName, exDate,
+		"SELECT COUNT(*) FROM stock_dividend WHERE stock_name = ? AND ex_date = ? AND dividend_per_unit = ?",
+		stockName, exDate, dividendPerUnit,
 	).Scan(&count)
 	if err != nil {
 		return false, err

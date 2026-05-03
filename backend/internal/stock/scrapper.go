@@ -70,7 +70,7 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 	}
 	for _, kd := range scraped {
 		// skipped inserted dividend
-		exists, err := stockRepo.existsDividend(s.StockName, kd.ExDate)
+		exists, err := stockRepo.existsDividend(s.StockName, kd.ExDate, kd.DividendPerUnit)
 		if err != nil {
 			log.Printf("Error checking dividend for %s: %v", s.StockName, err)
 			continue
@@ -86,7 +86,6 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 
 		// no need to proceed if as that date i didnt purchase any stock yet
 		if netUnit.IsZero() {
-			log.Printf("As of exDate %s, dont have any stock for %s", kd.ExDate.Format("2006-01-02"), s.StockName)
 			continue
 		}
 
@@ -98,6 +97,15 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 			DividendPerUnit: kd.DividendPerUnit,
 			Remark:          kd.Remark,
 		}
+
+		// Before year 2026, REIT subject to 10 % With-Holding tax
+		// TODO: even with this, data seem still not very tally (altho it is close),
+		// it is either data issue (during enter in file) or there are something i missed out.
+		if strings.Contains(s.StockName, "REIT") && dividend.ExDate.Year() <= 2025 {
+			taxPercentage := apd.New(1, -1)
+			dividend.TaxPercentage = *taxPercentage
+		}
+
 		ctx := apd.BaseContext
 		ctx.Precision = 14 // match DECIMAL(14,4): enough headroom, results rounded to 4dp by DB
 		if err := dividend.CalculateDividendTotalAmount(&ctx); err != nil {

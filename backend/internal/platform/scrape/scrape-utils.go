@@ -66,6 +66,7 @@ func GetHtmlStringFromUrl(targetURL string) (string, error) {
 			"*googlesyndication.com*",
 			"*googletagmanager.com*",
 			"*google-analytics.com*",
+			"*t.sharethis.com*",
 		}),
 		chromedp.Navigate(targetURL),
 		chromedp.Sleep(6*time.Second), // let JS redirects/challenge scripts settle

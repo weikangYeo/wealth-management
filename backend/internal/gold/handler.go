@@ -130,7 +130,7 @@ func parseGoldTxns(rows [][]string, indexByHeaderMap map[string]int) ([]Txn, err
 			return nil, err
 		}
 
-		ctx := apd.BaseContext.WithPrecision(12)
+		ctx := apd.BaseContext.WithPrecision(14)
 		totalPrice := new(apd.Decimal)
 		_, err = ctx.Mul(totalPrice, gram, unitPrice)
 		if err != nil {

@@ -61,6 +61,19 @@ type Price struct {
 	LastDonePrice apd.Decimal
 }
 
+type StockOverview struct {
+	StockName         string             `json:"stockName"`
+	DisplayName       string             `json:"displayName"`
+	BursaStockId      string             `json:"bursaStockId"`
+	DividendOverviews []DividendOverview `json:"dividendOverviews"`
+}
+
+type DividendOverview struct {
+	Year          string      `json:"year"`
+	TotalDividend apd.Decimal `json:"totalDividend"`
+	DividendYield apd.Decimal `json:"dividendYield"`
+}
+
 // UnmarshalJSON Custom JSON unmarshaling for date parsing,
 // auto called when ShouldBindJSON called.
 // Go principle: types own their behavior. The standard library itself does this — time.Time
@@ -205,7 +218,7 @@ func (dividend *Dividend) CalculateDividendTotalAmount(ctx *apd.Context) error {
 	}
 
 	taxAmount := new(apd.Decimal)
-	if _, err := ctx.Mul(taxAmount, &dividend.TaxPercentage, &dividend.GrossAmount); err != nil {
+	if _, err := ctx.Mul(taxAmount, &dividend.TaxPercentage, grossAmount); err != nil {
 		return err
 	}
 
