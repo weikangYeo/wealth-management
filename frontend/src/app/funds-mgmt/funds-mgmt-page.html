@@ -1,0 +1,110 @@
+<div class="mx-auto w-full max-w-6xl space-y-5">
+
+  <!-- Page title -->
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-xs text-slate-500 uppercase tracking-widest mb-1">Portfolio</p>
+      <h1 class="text-xl font-bold text-white">Fund Management</h1>
+    </div>
+    <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-full font-semibold">
+      {{ fundCount() }} Holdings
+    </span>
+  </div>
+
+  <!-- Two-column: Setup form + Holdings table -->
+  <div class="grid grid-cols-5 gap-5 items-start">
+
+    <!-- Fund Setup Form (2 cols) -->
+    <div class="col-span-2 glass-card rounded-2xl p-5">
+      <h2 class="text-sm font-bold text-white mb-1">Fund Setup</h2>
+      <p class="text-xs text-slate-500 mb-5">Create or update a fund profile, then open the detail page.</p>
+
+      <div class="space-y-3.5">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1.5">Fund Code</label>
+          <input
+            type="text"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:bg-white/8 transition-all"
+            placeholder="e.g. PRSEC"
+            #fundCode
+          />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1.5">Fund Name</label>
+          <input
+            type="text"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all"
+            placeholder="e.g. Public Regular Savings Fund"
+            #fundName
+          />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1.5">Fund URL</label>
+          <input
+            type="text"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all"
+            placeholder="e.g. https://..."
+            #fundUrl
+          />
+        </div>
+        <button
+          type="button"
+          class="w-full px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all glow-indigo"
+          (click)="saveFundProfile(fundCode.value, fundName.value, fundUrl.value)"
+        >
+          Save Fund
+        </button>
+      </div>
+    </div>
+
+    <!-- Holdings Table (3 cols) -->
+    <div class="col-span-3 glass-card rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/8">
+        <h2 class="text-sm font-bold text-white">Your Funds</h2>
+        <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">
+          {{ fundCount() }} Funds
+        </span>
+      </div>
+
+      @if (fundCount() === 0) {
+        <div class="px-5 py-12 text-center">
+          <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </div>
+          <p class="text-sm text-slate-500">No funds yet. Save a fund profile to get started.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
+                <th class="text-left px-5 py-3 font-semibold bg-white/3">Fund</th>
+                <th class="text-left px-4 py-3 font-semibold bg-white/3">Name</th>
+                <th class="px-4 py-3 bg-white/3"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              @for (fund of funds(); track fund.fundCode) {
+                <tr
+                  class="glass-row transition-colors cursor-pointer"
+                  (click)="openFundDetails(fund.fundCode)"
+                >
+                  <td class="px-5 py-4">
+                    <p class="font-bold text-indigo-300 text-xs tracking-widest uppercase">{{ fund.fundCode }}</p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <p class="text-xs text-slate-400">{{ fund.name }}</p>
+                  </td>
+                  <td class="px-4 py-4 text-right">
+                    <span class="text-xs text-indigo-400 font-semibold whitespace-nowrap">Details →</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,183 @@
+<div class="mx-auto w-full max-w-6xl space-y-5">
+
+  <!-- Back link -->
+  <a routerLink="/funds"
+     class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Funds
+  </a>
+
+  <!-- Fund Overview Header -->
+  <div class="glass-card rounded-2xl p-6">
+    <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-indigo-400">{{ fund().fundCode }}</p>
+        <h2 class="text-xl font-bold text-white mt-0.5">{{ fund().name }}</h2>
+        @if (fund().url) {
+          <a [href]="fund().url" target="_blank"
+             class="text-xs text-slate-500 hover:text-indigo-400 transition-colors mt-1 inline-block">
+            {{ fund().url }} ↗
+          </a>
+        }
+      </div>
+      <span class="bg-indigo-500/15 text-indigo-400 border border-indigo-500/25 px-3 py-1 rounded-full text-xs font-semibold">
+        {{ txnCount() }} Transactions
+      </span>
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="bg-white/5 rounded-xl px-4 py-3">
+        <p class="text-xs text-slate-500 mb-1">Total Units</p>
+        <p class="font-semibold text-white">{{ totalUnits() | number:'1.4-4' }}</p>
+      </div>
+      <div class="bg-white/5 rounded-xl px-4 py-3">
+        <p class="text-xs text-slate-500 mb-1">Avg Unit Price</p>
+        <p class="font-semibold text-white">RM {{ avgUnitPrice() | number:'1.4-4' }}</p>
+      </div>
+      <div class="bg-white/5 rounded-xl px-4 py-3">
+        <p class="text-xs text-slate-500 mb-1">Total Invested (Net)</p>
+        <p class="font-semibold text-white">RM {{ totalNetInvested() | number:'1.2-2' }}</p>
+      </div>
+      <div class="bg-white/5 rounded-xl px-4 py-3">
+        <p class="text-xs text-slate-500 mb-1">Total Sales Charge</p>
+        <p class="font-semibold text-slate-400">RM {{ totalSalesCharge() | number:'1.2-2' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column: Add Transaction + Transaction History -->
+  <div class="grid gap-5 lg:grid-cols-5 items-start">
+
+    <!-- Add Transaction (2 cols) -->
+    <div class="glass-card rounded-2xl p-5 lg:col-span-2">
+      <h3 class="text-sm font-bold text-white mb-0.5">Add Transaction</h3>
+      <p class="text-xs text-slate-500 mb-4">Fields with * are required.</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1.5">Transaction Date *</label>
+          <input type="date" #txnDate
+                 class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]"/>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">Type *</label>
+            <select #txnType
+                    class="w-full bg-[#1a1f35] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all">
+              <option value="BUY">BUY</option>
+              <option value="SELL">SELL</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">Unit *</label>
+            <input type="number" #unit min="0" step="0.0001"
+                   (input)="onUnitInput(unit.value, unitPrice.value)"
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">Unit Price (RM) *</label>
+            <input type="number" #unitPrice min="0" step="0.0001"
+                   (input)="onUnitInput(unit.value, unitPrice.value)"
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1.5">Sales Charge (RM)</label>
+            <input type="number" #salesCharge min="0" step="0.01"
+                   (input)="onSalesChargeInput(unit.value, unitPrice.value, salesCharge.value)"
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"/>
+          </div>
+        </div>
+
+        <!-- Computed totals preview -->
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="rounded-xl border border-white/8 bg-white/3 px-3.5 py-2.5">
+            <p class="text-xs text-slate-500 mb-0.5">Gross Total</p>
+            <p class="text-sm font-semibold text-slate-300">RM {{ grossPreview() | number:'1.2-2' }}</p>
+          </div>
+          <div class="rounded-xl border border-white/8 bg-white/3 px-3.5 py-2.5">
+            <p class="text-xs text-slate-500 mb-0.5">Net Total</p>
+            <p class="text-sm font-semibold text-white">RM {{ netPreview() | number:'1.2-2' }}</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1.5">Remark</label>
+          <textarea #remark rows="2"
+                    class="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
+                    placeholder="Optional notes"></textarea>
+        </div>
+
+        <button
+          type="button"
+          class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all glow-indigo"
+          (click)="addTxn(txnDate.value, txnType.value, unit.value, unitPrice.value, salesCharge.value, remark.value);
+                   txnDate.value=''; txnType.value='BUY'; unit.value=''; unitPrice.value=''; salesCharge.value=''; remark.value='';
+                   resetPreview()"
+        >
+          Add Transaction
+        </button>
+      </div>
+    </div>
+
+    <!-- Transaction History (3 cols) -->
+    <div class="glass-card rounded-2xl overflow-hidden lg:col-span-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-white/8">
+        <div>
+          <h3 class="text-sm font-bold text-white">Transaction History</h3>
+          <p class="text-xs text-slate-500 mt-0.5">All buy and sell activity for this fund.</p>
+        </div>
+        <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">
+          Total Net: RM {{ totalNetInvested() | number:'1.2-2' }}
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-white/8">
+              <th class="text-left px-5 py-3 font-semibold bg-white/3">Date</th>
+              <th class="text-center px-4 py-3 font-semibold bg-white/3">Type</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit Price</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Sales Charge</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Gross</th>
+              <th class="text-right px-5 py-3 font-semibold bg-white/3">Net</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            @for (txn of transactions(); track txn.id) {
+              <tr class="glass-row transition-colors">
+                <td class="px-5 py-3.5 text-xs text-slate-400">{{ txn.txnDate | date:'yyyy-MM-dd' }}</td>
+                <td class="px-4 py-3.5 text-center">
+                  <span class="rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+                        [class.bg-emerald-500]="txn.txnType === 'BUY'"
+                        [class.border]="true"
+                        [class.border-emerald-500]="txn.txnType === 'BUY'"
+                        [class.bg-rose-500]="txn.txnType === 'SELL'"
+                        [class.border-rose-500]="txn.txnType === 'SELL'"
+                  >{{ txn.txnType }}</span>
+                </td>
+                <td class="px-4 py-3.5 text-right text-xs text-slate-300">{{ txn.unit | number:'1.4-4' }}</td>
+                <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{ txn.unitPrice | number:'1.4-4' }}</td>
+                <td class="px-4 py-3.5 text-right text-xs text-slate-500">RM {{ txn.salesCharge | number:'1.2-2' }}</td>
+                <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{ txn.grossTotalPrice | number:'1.2-2' }}</td>
+                <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">RM {{ txn.netTotalPrice | number:'1.2-2' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="px-5 py-12 text-center text-sm text-slate-500">No transactions added yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

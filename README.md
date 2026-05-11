@@ -15,6 +15,9 @@
         - [ ] Stock (CARD BASE)
             - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
         - [ ] Cash
+- [ ] MCP support, allow AI to manipulate data for me, such as run
+- [ ] Run script to start everything via a script, and set it as win/mac service so it auto start
+    - [ ] local domain name so it can be navigated via url
 - [ ] Modules
     - [X] Gold
         - [X] Import/Export
@@ -25,11 +28,11 @@
     - [ ] Stock
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info
-          - [x] total dividends
-          - [ ] DY
-          - [ ] unreliazed return
-          - [ ] reliazed return
-          - [ ] anuallized return
+            - [x] total dividends
+            - [ ] DY
+            - [ ] unreliazed return
+            - [ ] reliazed return
+            - [ ] anuallized return
         - [x] Scrape Stock Price
             - [x] Scrape Stock Price from bursa
             - [x] Scrape Stock Price from klse screener
@@ -55,8 +58,14 @@
 - [ ] Based on scrapped info, feed to LLM to provide suggestion
     - [ ] compare LLM rules and custom defined (by dev) rules
 - [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
+- [ ] Host public
+    - Azure Static Web Apps (FE, free forever) + Azure App Service F1 (Go/Java BE, free forever) + Neon or Supabase (
+      PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the App
+      Service CPU constraint.
 
 ## Note for future self
+
+### Next todo
 
 - Funds module
 
