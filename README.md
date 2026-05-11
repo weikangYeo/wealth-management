@@ -111,5 +111,16 @@ GOLD_URL=<Url to scrape gold price> // now it only support 1 local
 STOCK_URL=<Url to scrape stock price> // now it only support bursa company profile
 ```
 
+### BE
+
+- `cd backend` (this is crucial because I have used `internal` in package)
 - `go run cmd/scrapper/main.go ` to start scrapper logic
-- `go` run cmd/server/main.go` to start web app logic 
+- `go` run cmd/server/main.go` to start web app logic
+
+### FE
+
+- `cd frontend`
+- `npm start`
+
+> if using window, make sure clone into wsl dir (~/xx/xx) directly instead of mount point (/mnt/c/user/xxx), mount point
+> perform is at least 3x slower in I/O
