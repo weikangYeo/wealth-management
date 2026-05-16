@@ -49,7 +49,3 @@ export interface Dividend {
   netAmount: number;
   remark: string;
 }
-
-export interface PaginatedResponse<T> {
-  content: T[]
-}

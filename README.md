@@ -66,7 +66,7 @@
 ## Note for future self
 
 ### Next todo
-
+- rerun scrapper, and let Claude cross check if data is now tally.
 - Funds module
 
 ### File structure

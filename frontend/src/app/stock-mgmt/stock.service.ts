@@ -1,13 +1,9 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {
-  CreateDividendModel,
-  CreateStockModel,
-  Dividend,
-  PaginatedResponse,
-  StockOverview,
-  StockTxn
-} from './stock.model';
+import {CreateDividendModel, CreateStockModel, Dividend, StockOverview, StockTxn} from './stock.model';
+
+import {PaginatedResponse} from '../common/pagination.model';
+
 
 @Injectable({providedIn: 'root'})
 export class StockService {

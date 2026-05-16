@@ -17,8 +17,6 @@ export class StockMgmt {
   private stockService = inject(StockService);
   private snackBar = inject(MatSnackBar);
 
-  protected activeStock = signal<CreateStockModel | null>(null);
-
   protected stocks = signal<StockOverview[]>([]);
 
   protected stockCount = computed(() =>

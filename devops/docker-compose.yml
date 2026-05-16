@@ -13,6 +13,7 @@ services:
       - 3307:3306
     volumes:
       - ./database/init:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
     command: mysqld --lower_case_table_names=1  --character_set_server=utf8 --explicit_defaults_for_timestamp
     healthcheck:
       test: ["CMD", "mysql", "-h", "localhost", "-uroot", "-proot", "-e", "SELECT 1"]
@@ -20,3 +21,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+
+volumes:
+  mysql-data:
