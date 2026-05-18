@@ -31,3 +31,41 @@ func (repo *repository) getAllFunds() ([]Fund, error) {
 	}
 	return funds, nil
 }
+func (repo *repository) insertFund(fund Fund) error {
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("INSERT INTO fund_info(fund_code, name, url) VALUES (?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(fund.FundCode, fund.Name, fund.URL)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (repo *repository) getFundTxnByFundCode(fundCode string) ([]Txn, error) {
+	rows, err := repo.db.Query("select id, fund_code,txn_date, unit, unit_price, sales_charge, gross_total_price, net_total_price, txn_type ,remark from fund_txn where fund_code=?",
+		fundCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var fundTxns []Txn
+	if rows.Next() {
+		var fundTxn Txn
+		if err := rows.Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnType,
+			&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge,
+			&fundTxn.GrossTotalPrice, &fundTxn.NetTotalPrice, &fundTxn.TxnType,
+			&fundTxn.Remark); err != nil {
+			return nil, err
+		}
+		fundTxns = append(fundTxns, fundTxn)
+	}
+	return fundTxns, nil
+}

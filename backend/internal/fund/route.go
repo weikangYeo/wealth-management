@@ -12,5 +12,6 @@ func RegisterFundRoutes(r *gin.Engine, db *sql.DB) {
 	route := r.Group("/funds")
 	{
 		route.GET("", h.getAllFunds)
+		route.POST("", h.addFund)
 	}
 }
