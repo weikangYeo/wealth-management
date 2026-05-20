@@ -13,4 +13,8 @@ export class FundService {
   getAllFundInfo() {
     return this.http.get<PaginatedResponse<Fund>>(this.FUND_DOMAIN_API_URL);
   }
+
+  addFundInfo(fund:Fund) {
+    return this.http.post<{status: string}>(this.FUND_DOMAIN_API_URL, fund)
+  }
 }

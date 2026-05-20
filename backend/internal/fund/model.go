@@ -33,7 +33,6 @@ type Txn struct {
 }
 
 type TxnRequest struct {
-	FundCode    string      `json:"fundCode"`
 	TxnDate     time.Time   `json:"txnDate"`
 	Unit        apd.Decimal `json:"unit"`
 	UnitPrice   apd.Decimal `json:"unitPrice"`
@@ -107,7 +106,7 @@ func (t *Txn) CalculateTxnTotals(ctx *apd.Context) error {
 	}
 
 	net := new(apd.Decimal)
-	if _, err := ctx.Add(net, gross, &t.SalesCharge); err != nil {
+	if _, err := ctx.Sub(net, gross, &t.SalesCharge); err != nil {
 		return err
 	}
 

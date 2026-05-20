@@ -19,12 +19,15 @@
 - [ ] Run script to start everything via a script, and set it as win/mac service so it auto start
     - [ ] local domain name so it can be navigated via url
 - [ ] Modules
+    - [ ] Wealth Overview
     - [X] Gold
         - [X] Import/Export
             - [X] Upsert Gold Txn
         - [X] View and aggregated info
         - [ ] Scrape gold price by banks
-    - [ ] Item by Item CRUD
+    - [ ] Funds
+      - [ ] CRUD 
+      - [ ] Scrapper
     - [ ] Stock
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info

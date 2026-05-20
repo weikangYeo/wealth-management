@@ -13,5 +13,7 @@ func RegisterFundRoutes(r *gin.Engine, db *sql.DB) {
 	{
 		route.GET("", h.getAllFunds)
 		route.POST("", h.addFund)
+		route.GET("/:fundCode/transactions", h.getFundTxnByFundCode)
+		route.POST("/:fundCode/transactions", h.addFundTxn)
 	}
 }

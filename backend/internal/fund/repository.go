@@ -69,3 +69,21 @@ func (repo *repository) getFundTxnByFundCode(fundCode string) ([]Txn, error) {
 	}
 	return fundTxns, nil
 }
+
+func (repo *repository) insertFundTxn(fundTxn Txn) error {
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("insert into fund_txn(id, fund_code,txn_date, unit, unit_price, sales_charge, gross_total_price, net_total_price, txn_type ,remark) values (?,?,?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(fundTxn.ID, fundTxn.FundCode, fundTxn.TxnDate, fundTxn.Unit, fundTxn.UnitPrice,
+		fundTxn.SalesCharge, fundTxn.GrossTotalPrice, fundTxn.NetTotalPrice, fundTxn.TxnType, fundTxn.Remark)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
