@@ -26,8 +26,8 @@
         - [X] View and aggregated info
         - [ ] Scrape gold price by banks
     - [ ] Funds
-      - [ ] CRUD 
-      - [ ] Scrapper
+        - [ ] CRUD
+        - [ ] Scrapper
     - [ ] Stock
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info
@@ -65,11 +65,15 @@
     - Azure Static Web Apps (FE, free forever) + Azure App Service F1 (Go/Java BE, free forever) + Neon or Supabase (
       PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the App
       Service CPU constraint.
+- [ ] Host privately in Home network
 
 ## Note for future self
 
 ### Next todo
-- Funds module
+
+- Funds module (basic setup would do, just need endpoints to bump data in)
+- Setup stock aggregate info, in /overviews API and get stock details API
+- Portfolio Overview
 
 ### File structure
 
