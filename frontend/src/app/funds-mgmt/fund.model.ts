@@ -6,15 +6,18 @@ export interface Fund {
   url: string;
 }
 
-export interface FundTxn {
+export interface FundTxn extends FundTxnReq{
   id?: string;
   fundCode: string;
+  grossTotalPrice?: number;
+  netTotalPrice?: number;
+}
+
+export interface FundTxnReq {
   txnDate: string;
   unit: number;
   unitPrice: number;
   salesCharge: number;
-  grossTotalPrice?: number;
-  netTotalPrice?: number;
   txnType: FundTxnType;
   remark: string;
 }

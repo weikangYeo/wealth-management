@@ -31,6 +31,17 @@ func (repo *repository) getAllFunds() ([]Fund, error) {
 	}
 	return funds, nil
 }
+
+func (repo *repository) getFundInfo(fundCode string) (Fund, error) {
+	var fund Fund
+	err := repo.db.QueryRow("SELECT fund_code, name, url FROM fund_info where fund_code=? ", fundCode).
+		Scan(&fund.FundCode, &fund.Name, &fund.URL)
+	if err != nil {
+		return fund, err
+	}
+	return fund, nil
+}
+
 func (repo *repository) insertFund(fund Fund) error {
 	tx, err := repo.db.Begin()
 	if err != nil {

@@ -28,6 +28,10 @@
     - [ ] Funds
         - [ ] CRUD
         - [ ] Scrapper
+            - [ ] Rethink, since fsm has bot detection, and manual import every time income distribution annouced is not
+              scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
+        - [ ] Aggregated result
+            - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
     - [ ] Stock
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info
@@ -36,6 +40,7 @@
             - [ ] unreliazed return
             - [ ] reliazed return
             - [ ] anuallized return
+            - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
         - [x] Scrape Stock Price
             - [x] Scrape Stock Price from bursa
             - [x] Scrape Stock Price from klse screener

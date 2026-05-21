@@ -1,7 +1,8 @@
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Fund, FundTxn, FundTxnType } from './fund.model';
+import {CommonModule} from '@angular/common';
+import {Component, computed, inject, signal} from '@angular/core';
+import {ActivatedRoute, RouterLink} from '@angular/router';
+import {Fund, FundTxn, FundTxnType} from './fund.model';
+import {FundService} from './fund.service';
 
 @Component({
   selector: 'app-fund-detail',
@@ -11,9 +12,11 @@ import { Fund, FundTxn, FundTxnType } from './fund.model';
 })
 export class FundDetail {
   private readonly route = inject(ActivatedRoute);
+  private readonly fundService = inject(FundService);
 
-  protected fund = signal<Fund>({ fundCode: '', name: '', url: '' });
+  protected fund = signal<Fund>({fundCode: '', name: '', url: ''});
   protected transactions = signal<FundTxn[]>([]);
+  protected fundCode = signal<string>('');
 
   protected txnCount = computed(() => this.transactions().length);
 
@@ -44,9 +47,30 @@ export class FundDetail {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const fundCode = (params.get('code') ?? '').toUpperCase();
-      // todo: wire up service to load fund and transactions
-      this.fund.set({ fundCode, name: fundCode, url: '' });
+      this.fundCode.set(fundCode);
+      this.loadFundInfo(fundCode)
+      this.loadFundTxns(fundCode)
     });
+  }
+
+  private loadFundInfo(fundCode:string){
+    this.fundService.getFundOverviewByFundCode(fundCode).subscribe({
+      next: data => {
+        this.fund.set(data)
+      },
+      error: err => console.log(err)
+    })
+  }
+
+  private loadFundTxns(fundCode: string) {
+    this.fundService.getFundTxnByFundCode(fundCode).subscribe(
+      {
+        next: data => {
+          this.transactions.set(data.content)
+        },
+        error : err => console.log(err)
+      }
+    );
   }
 
   protected onUnitInput(unit: string, unitPrice: string) {

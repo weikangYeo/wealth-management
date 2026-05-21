@@ -38,7 +38,8 @@ func (r repository) getAllStocks() ([]Stock, error) {
 
 func (r repository) getStockByStockName(code string) (Stock, error) {
 	var stock Stock
-	err := r.db.QueryRow("SELECT stock_name, display_name, bursa_stock_id FROM stock where stock_name=? ", code).Scan(&stock.StockName, &stock.DisplayName, &stock.BursaStockId)
+	err := r.db.QueryRow("SELECT stock_name, display_name, bursa_stock_id FROM stock where stock_name=? ", code).
+		Scan(&stock.StockName, &stock.DisplayName, &stock.BursaStockId)
 	if err != nil {
 		return Stock{}, err
 	}
