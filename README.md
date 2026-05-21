@@ -76,7 +76,6 @@
 
 ### Next todo
 
-- Funds module (basic setup would do, just need endpoints to bump data in)
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview
 
