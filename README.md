@@ -75,7 +75,8 @@
 ## Note for future self
 
 ### Next todo
-
+- fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
+  - Test AHAM 
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview
 

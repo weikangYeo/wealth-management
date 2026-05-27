@@ -1,0 +1,1 @@
+ALTER TABLE fund_info ADD COLUMN provider varchar(50);

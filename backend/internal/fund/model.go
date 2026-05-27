@@ -11,6 +11,7 @@ type Fund struct {
 	FundCode string `json:"fundCode"`
 	Name     string `json:"name"`
 	URL      string `json:"url"`
+	Provider string `json:"provider"`
 }
 
 type PriceHistory struct {
