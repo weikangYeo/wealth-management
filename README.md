@@ -28,8 +28,10 @@
     - [ ] Funds
         - [ ] CRUD
         - [ ] Scrapper
-            - [ ] Rethink, since fsm has bot detection, and manual import every time income distribution annouced is not
-              scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
+          - [ ] Rethink, since fsm has bot detection, and manual import every time income distribution annouced is not
+            scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
+          - [ ] Scrape fund dist base on latest data instead of always start from day 0
+        - [ ] Clean and Recompute all income distribution job (because one error would cause cumulative cal error later)
         - [ ] Aggregated result
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
     - [ ] Stock
@@ -76,7 +78,8 @@
 
 ### Next todo
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
-  - Test AHAM 
+  - Test AHAM (take one, probably PRS GROWTH First, then test the rest)
+  - other fund house 
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview
 

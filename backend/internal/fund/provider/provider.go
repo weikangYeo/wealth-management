@@ -8,7 +8,7 @@ import (
 
 type NavResult struct {
 	FundCode string
-	Nav      apd.Decimal
+	Nav      *apd.Decimal
 	NavDate  time.Time
 }
 
@@ -16,10 +16,11 @@ type DistributionResult struct {
 	FundCode    string
 	DeclareDate time.Time
 	PaymentDate time.Time
-	IncomeDist  apd.Decimal
+	SenPerUnit  *apd.Decimal
 }
 
 type FundDataProvider interface {
 	FetchLatestNav(fundCode string) (*NavResult, error)
-	FetchIncomeDistribution(fundCode string) ([]DistributionResult, error)
+	FetchNavByDate(fundCode string, date time.Time) (*NavResult, error)
+	FetchIncomeDistribution(fundCode string, fromDate time.Time) ([]DistributionResult, error)
 }

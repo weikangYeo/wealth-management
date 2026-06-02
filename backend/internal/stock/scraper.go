@@ -1,12 +1,12 @@
 package stock
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"time"
-	"wealth-management/internal/platform/database"
 	"wealth-management/internal/platform/decimal"
 	"wealth-management/internal/platform/scrape"
 
@@ -21,14 +21,7 @@ type klseDividend struct {
 	Remark          string
 }
 
-func ScrapeStockLastDonePrice() {
-	db, err := database.InitDbConnection(false)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if db != nil {
-		defer db.Close()
-	}
+func ScrapeStockLastDonePrice(db *sql.DB) {
 	stockRepo := newStockRepository(db)
 	stocks, err := stockRepo.getAllStocks()
 	if err != nil {

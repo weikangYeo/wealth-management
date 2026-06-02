@@ -61,12 +61,53 @@ func (p *AhamFundProvider) FetchLatestNav(fundCode string) (*NavResult, error) {
 	return &NavResult{
 		FundCode: fundCode,
 		NavDate:  navDate,
-		Nav:      *price,
+		Nav:      price,
 	}, nil
 }
 
-func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string) ([]DistributionResult, error) {
-	url := "https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=income_distribution&pf_code=" + fundCode
+func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*NavResult, error) {
+	dateStr := date.Format("2006-01-02")
+	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=daily_fund_performance&from_date=%s&to_date=%s&pf_code=%s",
+		dateStr, dateStr, fundCode)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var response fundNavResBody
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+	if len(response.Result) == 0 {
+		return nil, fmt.Errorf("empty response")
+	}
+	decimal := new(apd.Decimal)
+	latestNavRes := response.Result[0]
+	price, err := decimal.SetFloat64(latestNavRes.Fund)
+	if err != nil {
+		log.Printf("Error parsing daily fund price: %v", err)
+		return nil, err
+	}
+	navDate, err := time.Parse("2026-01-02", latestNavRes.AsOfDate)
+	if err != nil {
+		log.Printf("Error parsing daily fund date: %v", err)
+		return nil, err
+	}
+	return &NavResult{
+		FundCode: fundCode,
+		NavDate:  navDate,
+		Nav:      price,
+	}, nil
+}
+
+func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string, fromDate time.Time) ([]DistributionResult, error) {
+	filteredFromDate := ""
+	if !fromDate.IsZero() {
+		filteredFromDate = fromDate.Format("2006-01-02")
+	}
+
+	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=income_distribution&pf_code=%s&from=%s",
+		fundCode, filteredFromDate)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -100,7 +141,7 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string) ([]Distribut
 			FundCode:    fundCode,
 			DeclareDate: declareDate,
 			PaymentDate: paymentDate,
-			IncomeDist:  *incomeDist,
+			SenPerUnit:  incomeDist,
 		}
 		result = append(result, item)
 	}

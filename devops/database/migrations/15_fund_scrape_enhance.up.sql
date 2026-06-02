@@ -1,0 +1,1 @@
+ALTER TABLE fund_price_history RENAME COLUMN last_done_price to nav;

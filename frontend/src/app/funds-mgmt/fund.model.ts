@@ -25,7 +25,7 @@ export interface FundTxnReq {
 export interface FundPriceHistory {
   fundCode: string;
   priceDate: string;
-  lastDonePrice: number;
+  nav: number;
 }
 
 export interface PaginatedResponse<T> {

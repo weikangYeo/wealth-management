@@ -15,9 +15,9 @@ type Fund struct {
 }
 
 type PriceHistory struct {
-	FundCode      string      `json:"fundCode"`
-	PriceDate     time.Time   `json:"priceDate"`
-	LastDonePrice apd.Decimal `json:"lastDonePrice"`
+	FundCode  string      `json:"fundCode"`
+	PriceDate time.Time   `json:"priceDate"`
+	Nav       apd.Decimal `json:"nav"`
 }
 
 type Txn struct {
