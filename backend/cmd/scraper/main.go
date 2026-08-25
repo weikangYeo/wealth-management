@@ -2,13 +2,13 @@ package main
 
 import (
 	"log"
-	"wealth-management/internal/gold"
+	"wealth-management/internal/fund"
 	"wealth-management/internal/platform/config"
 	"wealth-management/internal/platform/database"
-	"wealth-management/internal/stock"
 )
 
 func main() {
+	config.BootstrapCommonConfig()
 	db, err := database.InitDbConnection(false)
 	if err != nil {
 		log.Fatal(err)
@@ -17,7 +17,7 @@ func main() {
 		defer db.Close()
 	}
 	log.Println("Starting scraper")
-	config.BootstrapCommonConfig()
-	gold.ScrapeGoldPrice()
-	stock.ScrapeStockLastDonePrice(db)
+	//gold.ScrapeGoldPrice()
+	//stock.ScrapeStockLastDonePrice(db)
+	fund.ScrapeFundNavAndIncomeDist(db)
 }

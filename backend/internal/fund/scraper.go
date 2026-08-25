@@ -32,6 +32,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 			log.Printf("Scraper for %s is not built, skipping.\n", fund.Provider)
 			continue
 		}
+		log.Printf("Scraping fund %s with provider %s\n", fund.Name, fund.Provider)
 		// Get today NAV
 		nav, err := scraper.FetchLatestNav(fund.FundCode)
 		if err != nil {
@@ -43,6 +44,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 			PriceDate: nav.NavDate,
 			Nav:       *nav.Nav,
 		}
+		log.Printf("Insert latest nav to table")
 		if err := fundRepo.insertIgnoreFundPriceHistory(priceHistory); err != nil {
 			log.Printf("Error inserting nav of %s: %s\n", fund.Provider, err.Error())
 			continue
@@ -116,7 +118,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 
 func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Time, bool) {
 	latestReinvestedTxn, err := fundRepo.getLatestReinvestmentTxn(fundCode)
-	if err == nil {
+	if err != nil {
 		return latestReinvestedTxn.TxnDate.Add(-time.Hour * 24), true
 	}
 	if !errors.Is(err, sql.ErrNoRows) {

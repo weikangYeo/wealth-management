@@ -18,7 +18,7 @@ func newRepository(db *sql.DB) *repository {
 }
 
 func (repo *repository) getAllFunds() ([]Fund, error) {
-	rows, err := repo.db.Query("SELECT fund_code, name, url FROM fund_info")
+	rows, err := repo.db.Query("SELECT fund_code, name, url, COALESCE(provider, '') FROM fund_info")
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (repo *repository) getAllFunds() ([]Fund, error) {
 	funds := make([]Fund, 0)
 	for rows.Next() {
 		var fund Fund
-		if err := rows.Scan(&fund.FundCode, &fund.Name, &fund.URL); err != nil {
+		if err := rows.Scan(&fund.FundCode, &fund.Name, &fund.URL, &fund.Provider); err != nil {
 			return nil, err
 		}
 		funds = append(funds, fund)

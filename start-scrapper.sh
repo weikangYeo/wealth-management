@@ -11,5 +11,5 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 docker compose -f devops/docker-compose.yml up --wait
-(cd backend && go run cmd/scrapper/main.go) &
+(cd backend && go run cmd/scraper/main.go) &
 wait

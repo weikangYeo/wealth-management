@@ -1,8 +1,10 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -10,17 +12,28 @@ import (
 	"github.com/cockroachdb/apd/v3"
 )
 
+var utf8BOM = []byte{0xEF, 0xBB, 0xBF}
+
+func decodeJSON(r io.Reader, v any) error {
+	body, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	body = bytes.TrimPrefix(body, utf8BOM)
+	return json.Unmarshal(body, v)
+}
+
 // todo test
 type AhamFundProvider struct {
 }
 
 type fundNavResBody struct {
-	Result []fundNavItem `json:"dailyfundperformanceResult"`
+	Result []fundNavItem `json:"productnavhistoricalResult"`
 }
 
 type fundNavItem struct {
-	AsOfDate string  `json:"AsOfDate"`
-	Fund     float64 `json:"Fund"`
+	NavDate string  `json:"NAVDate"`
+	Nav     float64 `json:"NAV"`
 }
 
 type incomeDistResBody struct {
@@ -34,26 +47,29 @@ type incomeDistItem struct {
 
 func (p *AhamFundProvider) FetchLatestNav(fundCode string) (*NavResult, error) {
 	todayDate := time.Now().Format("2006-01-02")
-	previousMonthDate := time.Now().AddDate(0, -1, 0).Format("2006-01-02")
-	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=daily_fund_performance&from_date=%s&to_date=%s&pf_code=%s",
-		previousMonthDate, todayDate, fundCode)
+	lastWeek := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=product_nav_historical&from_date=%s&to_date=%s&pf_code=%s",
+		lastWeek, todayDate, fundCode)
 	resp, err := http.Get(url)
+	log.Printf("Fetching %s from %s\n", fundCode, url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 	var response fundNavResBody
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	log.Printf("Decoding response %s\n", resp.Status)
+	if err := decodeJSON(resp.Body, &response); err != nil {
 		return nil, err
 	}
 	decimal := new(apd.Decimal)
+	log.Printf("Getting latest nav, last index of response")
 	latestNavRes := response.Result[len(response.Result)-1]
-	price, err := decimal.SetFloat64(latestNavRes.Fund)
+	price, err := decimal.SetFloat64(latestNavRes.Nav)
 	if err != nil {
 		log.Printf("Error parsing daily fund price: %v", err)
 		return nil, err
 	}
-	navDate, err := time.Parse("2026-01-02", latestNavRes.AsOfDate)
+	navDate, err := time.Parse("2006-01-02", latestNavRes.NavDate)
 	if err != nil {
 		log.Printf("Error parsing daily fund date: %v", err)
 		return nil, err
@@ -75,7 +91,7 @@ func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*Nav
 	}
 	defer resp.Body.Close()
 	var response fundNavResBody
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := decodeJSON(resp.Body, &response); err != nil {
 		return nil, err
 	}
 	if len(response.Result) == 0 {
@@ -83,12 +99,12 @@ func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*Nav
 	}
 	decimal := new(apd.Decimal)
 	latestNavRes := response.Result[0]
-	price, err := decimal.SetFloat64(latestNavRes.Fund)
+	price, err := decimal.SetFloat64(latestNavRes.Nav)
 	if err != nil {
 		log.Printf("Error parsing daily fund price: %v", err)
 		return nil, err
 	}
-	navDate, err := time.Parse("2026-01-02", latestNavRes.AsOfDate)
+	navDate, err := time.Parse("2006-01-02", latestNavRes.NavDate)
 	if err != nil {
 		log.Printf("Error parsing daily fund date: %v", err)
 		return nil, err
@@ -114,7 +130,7 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string, fromDate tim
 	}
 	defer resp.Body.Close()
 	var response incomeDistResBody
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := decodeJSON(resp.Body, &response); err != nil {
 		return nil, err
 	}
 
