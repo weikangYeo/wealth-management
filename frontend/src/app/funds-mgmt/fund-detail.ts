@@ -26,8 +26,8 @@ export class FundDetail {
     }, 0)
   );
 
-  protected totalNetInvested = computed(() =>
-    this.transactions().reduce((sum, t) => sum + (t.netTotalPrice ?? 0), 0)
+  protected totalNetInvestmentAmount = computed(() =>
+    this.transactions().reduce((sum, t) => sum + (t.netInvestmentAmount ?? 0), 0)
   );
 
   protected totalSalesCharge = computed(() =>
@@ -36,13 +36,13 @@ export class FundDetail {
 
   protected avgUnitPrice = computed(() => {
     const units = this.totalUnits();
-    const gross = this.transactions().reduce((sum, t) => sum + (t.grossTotalPrice ?? 0), 0);
-    return units > 0 ? gross / units : 0;
+    const netInvestmentAmount = this.transactions().reduce((sum, t) => sum + (t.netInvestmentAmount ?? 0), 0);
+    return units > 0 ? netInvestmentAmount / units : 0;
   });
 
   // form preview signals
-  protected grossPreview = signal<number>(0);
-  protected netPreview = signal<number>(0);
+  protected netInvestmentPreview = signal<number>(0);
+  protected totalAmountPreview = signal<number>(0);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -66,7 +66,7 @@ export class FundDetail {
     this.fundService.getFundTxnByFundCode(fundCode).subscribe(
       {
         next: data => {
-          this.transactions.set(data.content)
+          this.transactions.set(data.content ?? [])
         },
         error : err => console.log(err)
       }
@@ -74,20 +74,20 @@ export class FundDetail {
   }
 
   protected onUnitInput(unit: string, unitPrice: string) {
-    const gross = (Number(unit) || 0) * (Number(unitPrice) || 0);
-    this.grossPreview.set(gross);
-    this.netPreview.set(gross);
+    const netInvestmentAmount = (Number(unit) || 0) * (Number(unitPrice) || 0);
+    this.netInvestmentPreview.set(netInvestmentAmount);
+    this.totalAmountPreview.set(netInvestmentAmount);
   }
 
   protected onSalesChargeInput(unit: string, unitPrice: string, salesCharge: string) {
-    const gross = (Number(unit) || 0) * (Number(unitPrice) || 0);
-    this.grossPreview.set(gross);
-    this.netPreview.set(gross + (Number(salesCharge) || 0));
+    const netInvestmentAmount = (Number(unit) || 0) * (Number(unitPrice) || 0);
+    this.netInvestmentPreview.set(netInvestmentAmount);
+    this.totalAmountPreview.set(netInvestmentAmount + (Number(salesCharge) || 0));
   }
 
   protected resetPreview() {
-    this.grossPreview.set(0);
-    this.netPreview.set(0);
+    this.netInvestmentPreview.set(0);
+    this.totalAmountPreview.set(0);
   }
 
   protected addTxn(
@@ -105,8 +105,8 @@ export class FundDetail {
     const unitNum = Number(unit);
     const unitPriceNum = Number(unitPrice);
     const salesChargeNum = Number(salesCharge) || 0;
-    const gross = unitNum * unitPriceNum;
-    const net = gross + salesChargeNum;
+    const netInvestmentAmount = unitNum * unitPriceNum;
+    const totalAmount = netInvestmentAmount + salesChargeNum;
 
     if (unitNum <= 0) return;
 
@@ -118,8 +118,8 @@ export class FundDetail {
       unit: unitNum,
       unitPrice: unitPriceNum,
       salesCharge: salesChargeNum,
-      grossTotalPrice: gross,
-      netTotalPrice: net,
+      netInvestmentAmount: netInvestmentAmount,
+      totalAmount: totalAmount,
       remark: remark?.trim() || '',
     };
 

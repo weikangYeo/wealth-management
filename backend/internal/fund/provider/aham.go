@@ -3,16 +3,18 @@ package provider
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/cockroachdb/apd/v3"
 )
 
 var utf8BOM = []byte{0xEF, 0xBB, 0xBF}
+
+const ahamBaseURL = "https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx"
 
 func decodeJSON(r io.Reader, v any) error {
 	body, err := io.ReadAll(r)
@@ -45,13 +47,23 @@ type incomeDistItem struct {
 	IncomeDist  float64 `json:"IncomeDist"`
 }
 
-func (p *AhamFundProvider) FetchLatestNav(fundCode string) (*NavResult, error) {
-	todayDate := time.Now().Format("2006-01-02")
-	lastWeek := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
-	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=product_nav_historical&from_date=%s&to_date=%s&pf_code=%s",
-		lastWeek, todayDate, fundCode)
-	resp, err := http.Get(url)
-	log.Printf("Fetching %s from %s\n", fundCode, url)
+func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*NavResult, error) {
+	u, err := url.Parse(ahamBaseURL)
+	if err != nil {
+		return nil, err
+	}
+	// make few day earlier because weekend and holiday dont have nav
+	formatedFromDate := date.AddDate(0, 0, -3).Format("2006-01-02")
+	formatedToDate := date.Format("2006-01-02")
+	// build url
+	queryParam := u.Query()
+	queryParam.Set("action", "product_nav_historical")
+	queryParam.Set("from_date", formatedFromDate)
+	queryParam.Set("to_date", formatedToDate)
+	queryParam.Set("pf_code", fundCode)
+	u.RawQuery = queryParam.Encode()
+	resp, err := http.Get(u.String())
+	log.Printf("Fetching %s from %s\n", fundCode, u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -81,50 +93,21 @@ func (p *AhamFundProvider) FetchLatestNav(fundCode string) (*NavResult, error) {
 	}, nil
 }
 
-func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*NavResult, error) {
-	dateStr := date.Format("2006-01-02")
-	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=daily_fund_performance&from_date=%s&to_date=%s&pf_code=%s",
-		dateStr, dateStr, fundCode)
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var response fundNavResBody
-	if err := decodeJSON(resp.Body, &response); err != nil {
-		return nil, err
-	}
-	if len(response.Result) == 0 {
-		return nil, fmt.Errorf("empty response")
-	}
-	decimal := new(apd.Decimal)
-	latestNavRes := response.Result[0]
-	price, err := decimal.SetFloat64(latestNavRes.Nav)
-	if err != nil {
-		log.Printf("Error parsing daily fund price: %v", err)
-		return nil, err
-	}
-	navDate, err := time.Parse("2006-01-02", latestNavRes.NavDate)
-	if err != nil {
-		log.Printf("Error parsing daily fund date: %v", err)
-		return nil, err
-	}
-	return &NavResult{
-		FundCode: fundCode,
-		NavDate:  navDate,
-		Nav:      price,
-	}, nil
-}
-
 func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string, fromDate time.Time) ([]DistributionResult, error) {
 	filteredFromDate := ""
 	if !fromDate.IsZero() {
 		filteredFromDate = fromDate.Format("2006-01-02")
 	}
-
-	url := fmt.Sprintf("https://aham.com.my/clients/asset_C0C09289-21F6-4E4F-BA45-A8A98943FE33/api.ashx?action=income_distribution&pf_code=%s&from=%s",
-		fundCode, filteredFromDate)
-	resp, err := http.Get(url)
+	u, err := url.Parse(ahamBaseURL)
+	if err != nil {
+		return nil, err
+	}
+	queryParam := u.Query()
+	queryParam.Set("action", "income_distribution")
+	queryParam.Set("from_date", filteredFromDate)
+	queryParam.Set("pf_code", fundCode)
+	u.RawQuery = queryParam.Encode()
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, err
 	}

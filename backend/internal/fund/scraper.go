@@ -9,6 +9,7 @@ import (
 	"wealth-management/internal/fund/provider"
 
 	"github.com/cockroachdb/apd/v3"
+	"github.com/google/uuid"
 )
 
 // ScrapeFundNavAndIncomeDist pull nav and income dist, and compute REINVESTED transaction.
@@ -34,7 +35,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 		}
 		log.Printf("Scraping fund %s with provider %s\n", fund.Name, fund.Provider)
 		// Get today NAV
-		nav, err := scraper.FetchLatestNav(fund.FundCode)
+		nav, err := scraper.FetchNavByDate(fund.FundCode, time.Now())
 		if err != nil {
 			log.Printf("Error while scrape nav of %s: %s\n", fund.Provider, err.Error())
 			continue
@@ -44,7 +45,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 			PriceDate: nav.NavDate,
 			Nav:       *nav.Nav,
 		}
-		log.Printf("Insert latest nav to table")
+		log.Printf("Insert latest nav to table: %v", priceHistory)
 		if err := fundRepo.insertIgnoreFundPriceHistory(priceHistory); err != nil {
 			log.Printf("Error inserting nav of %s: %s\n", fund.Provider, err.Error())
 			continue
@@ -97,15 +98,16 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 			}
 
 			reinvestedTxn := Txn{
-				FundCode:        fund.FundCode,
-				TxnDate:         d.PaymentDate,
-				Unit:            *reinvestedUnit,
-				UnitPrice:       *navResult.Nav,
-				SalesCharge:     *apd.New(0, 0),
-				GrossTotalPrice: *dividendPayout,
-				NetTotalPrice:   *dividendPayout,
-				TxnType:         "REINVESTED",
-				Remark:          "REINVESTED",
+				ID:                  uuid.NewString(),
+				FundCode:            fund.FundCode,
+				TxnDate:             d.PaymentDate,
+				Unit:                *reinvestedUnit,
+				UnitPrice:           *navResult.Nav,
+				SalesCharge:         *apd.New(0, 0),
+				NetInvestmentAmount: *dividendPayout,
+				TotalAmount:         *apd.New(0, 0),
+				TxnType:             "REINVESTED",
+				Remark:              "REINVESTED",
 			}
 			err = fundRepo.insertFundTxn(reinvestedTxn)
 			if err != nil {
@@ -118,7 +120,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 
 func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Time, bool) {
 	latestReinvestedTxn, err := fundRepo.getLatestReinvestmentTxn(fundCode)
-	if err != nil {
+	if err == nil {
 		return latestReinvestedTxn.TxnDate.Add(-time.Hour * 24), true
 	}
 	if !errors.Is(err, sql.ErrNoRows) {

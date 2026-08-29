@@ -20,7 +20,6 @@ type DistributionResult struct {
 }
 
 type FundDataProvider interface {
-	FetchLatestNav(fundCode string) (*NavResult, error)
 	FetchNavByDate(fundCode string, date time.Time) (*NavResult, error)
 	FetchIncomeDistribution(fundCode string, fromDate time.Time) ([]DistributionResult, error)
 }

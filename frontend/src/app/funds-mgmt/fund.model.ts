@@ -9,8 +9,8 @@ export interface Fund {
 export interface FundTxn extends FundTxnReq{
   id?: string;
   fundCode: string;
-  grossTotalPrice?: number;
-  netTotalPrice?: number;
+  netInvestmentAmount?: number;
+  totalAmount?: number;
 }
 
 export interface FundTxnReq {

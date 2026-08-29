@@ -1,5 +1,46 @@
 # Wealth Management
 
+## Prerequisites
+
+Install these before running the project:
+
+- **Go** — version matching `go 1.26` in `backend/go.mod` (or newer). Check with `go version`.
+- **Node.js + npm** — a version compatible with Angular CLI 21 (`frontend/package.json` pins `npm@11.9.0`). Check with
+  `node -v` / `npm -v`; see https://angular.dev for Angular's current supported Node versions.
+- **Docker + Docker Compose** — used to run the MySQL database (`devops/docker-compose.yml`). Check with `docker -v`.
+- **Chrome or Chromium installed locally** — the scraper (`backend/internal/platform/scrape`) drives an existing browser
+  install via `chromedp`/headless Chrome; it does not bundle its own browser.
+
+## Start project
+
+- run `docker-compose up` in `/devops` folder
+- create a file call `.env` in `backend` directory, which following content
+
+```
+DBUSER=<replace with your username>
+DBPASS=<replace with your password>
+GOLD_URL=<Url to scrape gold price> // now it only support 1 local
+STOCK_URL=<Url to scrape stock price> // now it only support bursa company profile
+KLSE_STOCK_BASE_URL=<url to scrape klse index price>
+```
+
+- run `start-all.sh` to start BE (web server) + FE
+- run `start-scraper.sh` to start scraper logic
+
+### start BE alone
+
+- `cd backend` (this is crucial because I have used `internal` in package)
+- `go run cmd/scrapper/main.go ` to start scrapper logic
+- `go` run cmd/server/main.go` to start web app logic
+
+### start FE alone
+
+- `cd frontend`
+- `npm start`
+
+> if using window, make sure clone into wsl dir (~/xx/xx) directly instead of mount point (/mnt/c/user/xxx), mount point
+> perform is at least 3x slower in I/O
+
 ## TODO
 
 - [ ] Makefile
@@ -26,14 +67,19 @@
         - [X] View and aggregated info
         - [ ] Scrape gold price by banks
     - [ ] Funds
-        - [ ] CRUD
+        - [X] CRUD
         - [ ] Scrapper
-          - [ ] Rethink, since fsm has bot detection, and manual import every time income distribution annouced is not
-            scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
-          - [ ] Scrape fund dist base on latest data instead of always start from day 0
+            - [ ] Rethink, since fsm has bot detection, and manual import every time income distribution annouced is not
+              scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
+            - [x] Scrape fund dist base on latest data instead of always start from day 0
+            - [ ] Fund House
+              - [X] Aham (Affin Hwang)
+              - [ ] Principal
+              - [ ] FSM other funds
         - [ ] Clean and Recompute all income distribution job (because one error would cause cumulative cal error later)
         - [ ] Aggregated result
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
+        - [ ] Widget - Total Cost, P&L, Annualized Return
     - [ ] Stock
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info
@@ -69,72 +115,16 @@
     - [ ] compare LLM rules and custom defined (by dev) rules
 - [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
 - [ ] Host public
-    - Azure Static Web Apps (FE, free forever) + Azure App Service F1 (Go/Java BE, free forever) + Neon or Supabase (
-      PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the App
+    - Azure Static Web Apps (FE, free forever) + Azure App Service F1 (Go/Java BE, free forever) + Neon or Supabase
+      (PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the App
       Service CPU constraint.
 - [ ] Host privately in Home network
 
 ## Note for future self
 
 ### Next todo
+
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
-  - Test AHAM (take one, probably PRS GROWTH First, then test the rest)
-  - other fund house 
+    - other fund house
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview
-
-### File structure
-
-this repo is using "Package by feature" way to seperate packages.
-
-```
-backend/
-    ├── cmd/
-    │   └── scrapper/
-    │       └── main.go             # Entry point for scrapper
-    │   └── server/
-    │       └── main.go             # Entry point for web BE
-    ├── internal/                   # Code not meant to be imported by other projects
-    │   ├── gold/                   # FEATURE: Gold Management
-    │   │   ├── handler.go          # HTTP endpoints (was gold_handler.go)
-    │   │   ├── repository.go       # DB operations (was gold_repo.go)
-    │   │   ├── model.go            # Data structures (was domains/gold.go)
-    │   │   ├── scrapper.go         # Scraping logic (was gold_price_scrapper.go)
-    │   │   └── routes.go           # Feature-specific route registration
-    │   │
-    │   ├── system/                 # FEATURE: System/Health
-    │   │   └── ping.go             # (was ping_route.go)
-    │   │
-    │   └── platform/               # SHARED TOOLS/INFRASTRUCTURE
-    │       ├── scraper/
-    │       │   └── cookies.go      # Shared scraper utils (was cookies-harvestor.go)
-    │       └── database/           # DB connection/init logic
-    ├── go.mod
-    └── go.sum
-```
-
-## Start project
-
-- run `docker-compose up` in `/devops` folder
-- create a file call `.env` in `backend` directory, which following content
-
-```
-DBUSER=<replace with your username>
-DBPASS=<replace with your password>
-GOLD_URL=<Url to scrape gold price> // now it only support 1 local
-STOCK_URL=<Url to scrape stock price> // now it only support bursa company profile
-```
-
-### BE
-
-- `cd backend` (this is crucial because I have used `internal` in package)
-- `go run cmd/scrapper/main.go ` to start scrapper logic
-- `go` run cmd/server/main.go` to start web app logic
-
-### FE
-
-- `cd frontend`
-- `npm start`
-
-> if using window, make sure clone into wsl dir (~/xx/xx) directly instead of mount point (/mnt/c/user/xxx), mount point
-> perform is at least 3x slower in I/O

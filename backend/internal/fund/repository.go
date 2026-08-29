@@ -67,20 +67,20 @@ func (repo *repository) insertFund(fund Fund) error {
 }
 
 func (repo *repository) getFundTxnByFundCode(fundCode string) ([]Txn, error) {
-	rows, err := repo.db.Query(`select id, fund_code,txn_date, unit, unit_price, sales_charge, 
-    	gross_total_price, net_total_price, txn_type ,remark 
+	rows, err := repo.db.Query(`select id, fund_code,txn_date, unit, unit_price, sales_charge,
+    	net_investment_amount, total_amount, txn_type ,remark
 		from fund_txn where fund_code=?`,
 		fundCode)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var fundTxns []Txn
+	fundTxns := make([]Txn, 0)
 	for rows.Next() {
 		var fundTxn Txn
-		if err := rows.Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnType,
+		if err := rows.Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
 			&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge,
-			&fundTxn.GrossTotalPrice, &fundTxn.NetTotalPrice, &fundTxn.TxnType,
+			&fundTxn.NetInvestmentAmount, &fundTxn.TotalAmount, &fundTxn.TxnType,
 			&fundTxn.Remark); err != nil {
 			return nil, err
 		}
@@ -95,15 +95,15 @@ func (repo *repository) insertFundTxn(fundTxn Txn) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare(`insert into fund_txn(id, fund_code,txn_date, unit, 
-                     unit_price, sales_charge, gross_total_price, net_total_price, 
+	stmt, err := tx.Prepare(`insert into fund_txn(id, fund_code,txn_date, unit,
+                     unit_price, sales_charge, net_investment_amount, total_amount,
                      txn_type ,remark) values (?,?,?,?,?,?,?,?,?,?)`)
-	defer stmt.Close()
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(fundTxn.ID, fundTxn.FundCode, fundTxn.TxnDate, fundTxn.Unit, fundTxn.UnitPrice,
-		fundTxn.SalesCharge, fundTxn.GrossTotalPrice, fundTxn.NetTotalPrice, fundTxn.TxnType, fundTxn.Remark)
+		fundTxn.SalesCharge, fundTxn.NetInvestmentAmount, fundTxn.TotalAmount, fundTxn.TxnType, fundTxn.Remark)
 	if err != nil {
 		return err
 	}
@@ -116,11 +116,11 @@ func (repo *repository) insertIgnoreFundPriceHistory(priceHistory PriceHistory) 
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare("insert ignore into fund_price_history(fund_code, price_date, last_done_price) values (?, ?, ?)")
-	defer stmt.Close()
+	stmt, err := tx.Prepare("insert ignore into fund_price_history(fund_code, price_date, nav) values (?, ?, ?)")
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(priceHistory.FundCode, priceHistory.PriceDate, priceHistory.Nav)
 	if err != nil {
 		return err
@@ -135,10 +135,10 @@ func (repo *repository) getOldestFundTxn(fundCode string) (Txn, error) {
 	}
 	defer tx.Rollback()
 	var fundTxn Txn
-	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, gross_total_price, net_total_price, txn_type, remark FROM fund_txn WHERE fund_code=? ORDER BY txn_date ASC LIMIT 1",
+	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, net_investment_amount, total_amount, txn_type, remark FROM fund_txn WHERE fund_code=? ORDER BY txn_date ASC LIMIT 1",
 		fundCode).Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
-		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.GrossTotalPrice,
-		&fundTxn.NetTotalPrice, &fundTxn.TxnType, &fundTxn.Remark)
+		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.NetInvestmentAmount,
+		&fundTxn.TotalAmount, &fundTxn.TxnType, &fundTxn.Remark)
 	if err != nil {
 		return Txn{}, err
 	}
@@ -152,10 +152,10 @@ func (repo *repository) getLatestReinvestmentTxn(fundCode string) (Txn, error) {
 	}
 	defer tx.Rollback()
 	var fundTxn Txn
-	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, gross_total_price, net_total_price, txn_type, remark FROM fund_txn WHERE fund_code=? AND txn_type =? ORDER BY txn_date ASC LIMIT 1",
-		fundCode).Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
-		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.GrossTotalPrice,
-		&fundTxn.NetTotalPrice, &fundTxn.TxnType, &fundTxn.Remark)
+	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, net_investment_amount, total_amount, txn_type, remark FROM fund_txn WHERE fund_code=? AND txn_type =? ORDER BY txn_date ASC LIMIT 1",
+		fundCode, "REINVESTED").Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
+		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.NetInvestmentAmount,
+		&fundTxn.TotalAmount, &fundTxn.TxnType, &fundTxn.Remark)
 	if err != nil {
 		return Txn{}, err
 	}

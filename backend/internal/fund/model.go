@@ -2,6 +2,7 @@ package fund
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/cockroachdb/apd/v3"
@@ -21,16 +22,16 @@ type PriceHistory struct {
 }
 
 type Txn struct {
-	ID              string      `json:"id"`
-	FundCode        string      `json:"fundCode"`
-	TxnDate         time.Time   `json:"txnDate"`
-	Unit            apd.Decimal `json:"unit"`
-	UnitPrice       apd.Decimal `json:"unitPrice"`
-	SalesCharge     apd.Decimal `json:"salesCharge"`
-	GrossTotalPrice apd.Decimal `json:"grossTotalPrice"`
-	NetTotalPrice   apd.Decimal `json:"netTotalPrice"`
-	TxnType         string      `json:"txnType"`
-	Remark          string      `json:"remark"`
+	ID                  string      `json:"id"`
+	FundCode            string      `json:"fundCode"`
+	TxnDate             time.Time   `json:"txnDate"`
+	Unit                apd.Decimal `json:"unit"`
+	UnitPrice           apd.Decimal `json:"unitPrice"`
+	SalesCharge         apd.Decimal `json:"salesCharge"`
+	NetInvestmentAmount apd.Decimal `json:"netInvestmentAmount"`
+	TotalAmount         apd.Decimal `json:"totalAmount"`
+	TxnType             string      `json:"txnType"`
+	Remark              string      `json:"remark"`
 }
 
 type TxnRequest struct {
@@ -83,35 +84,47 @@ func (t *TxnRequest) UnmarshalJSON(data []byte) error {
 func (t *Txn) MarshalJSON() ([]byte, error) {
 	type Alias Txn
 	return json.Marshal(&struct {
-		Unit            json.Number `json:"unit"`
-		UnitPrice       json.Number `json:"unitPrice"`
-		SalesCharge     json.Number `json:"salesCharge"`
-		GrossTotalPrice json.Number `json:"grossTotalPrice"`
-		NetTotalPrice   json.Number `json:"netTotalPrice"`
+		Unit                json.Number `json:"unit"`
+		UnitPrice           json.Number `json:"unitPrice"`
+		SalesCharge         json.Number `json:"salesCharge"`
+		NetInvestmentAmount json.Number `json:"netInvestmentAmount"`
+		TotalAmount         json.Number `json:"totalAmount"`
 		*Alias
 	}{
-		Unit:            json.Number(t.Unit.String()),
-		UnitPrice:       json.Number(t.UnitPrice.String()),
-		SalesCharge:     json.Number(t.SalesCharge.String()),
-		GrossTotalPrice: json.Number(t.GrossTotalPrice.String()),
-		NetTotalPrice:   json.Number(t.NetTotalPrice.String()),
-		Alias:           (*Alias)(t),
+		Unit:                json.Number(t.Unit.String()),
+		UnitPrice:           json.Number(t.UnitPrice.String()),
+		SalesCharge:         json.Number(t.SalesCharge.String()),
+		NetInvestmentAmount: json.Number(t.NetInvestmentAmount.String()),
+		TotalAmount:         json.Number(t.TotalAmount.String()),
+		Alias:               (*Alias)(t),
 	})
 }
 
-// CalculateTxnTotals computes grossTotalPrice = unit * unitPrice, netTotalPrice = grossTotalPrice + salesCharge
+// CalculateTxnTotals computes netInvestmentAmount = unit * unitPrice (value of units transacted), and totalAmount,
+// the actual cash that moved: netInvestmentAmount + salesCharge on BUY (fee paid on top), netInvestmentAmount -
+// salesCharge on SELL (a redemption fee reduces proceeds), or 0 on REINVESTED (no fresh cash changes hands).
 func (t *Txn) CalculateTxnTotals(ctx *apd.Context) error {
-	gross := new(apd.Decimal)
-	if _, err := ctx.Mul(gross, &t.Unit, &t.UnitPrice); err != nil {
+	netInvestmentAmount := new(apd.Decimal)
+	if _, err := ctx.Mul(netInvestmentAmount, &t.Unit, &t.UnitPrice); err != nil {
 		return err
 	}
+	t.NetInvestmentAmount = *netInvestmentAmount
 
-	net := new(apd.Decimal)
-	if _, err := ctx.Sub(net, gross, &t.SalesCharge); err != nil {
-		return err
+	totalAmount := new(apd.Decimal)
+	switch t.TxnType {
+	case "BUY":
+		if _, err := ctx.Add(totalAmount, netInvestmentAmount, &t.SalesCharge); err != nil {
+			return err
+		}
+	case "SELL":
+		if _, err := ctx.Sub(totalAmount, netInvestmentAmount, &t.SalesCharge); err != nil {
+			return err
+		}
+	case "REINVESTED":
+		*totalAmount = *apd.New(0, 0)
+	default:
+		return fmt.Errorf("unknown txn type: %s", t.TxnType)
 	}
-
-	t.GrossTotalPrice = *gross
-	t.NetTotalPrice = *net
+	t.TotalAmount = *totalAmount
 	return nil
 }

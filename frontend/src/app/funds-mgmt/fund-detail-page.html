@@ -37,8 +37,8 @@
         <p class="font-semibold text-white">RM {{ avgUnitPrice() | number:'1.4-4' }}</p>
       </div>
       <div class="bg-white/5 rounded-xl px-4 py-3">
-        <p class="text-xs text-slate-500 mb-1">Total Invested (Net)</p>
-        <p class="font-semibold text-white">RM {{ totalNetInvested() | number:'1.2-2' }}</p>
+        <p class="text-xs text-slate-500 mb-1">Net Investment Amount</p>
+        <p class="font-semibold text-white">RM {{ totalNetInvestmentAmount() | number:'1.2-2' }}</p>
       </div>
       <div class="bg-white/5 rounded-xl px-4 py-3">
         <p class="text-xs text-slate-500 mb-1">Total Sales Charge</p>
@@ -97,12 +97,12 @@
         <!-- Computed totals preview -->
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="rounded-xl border border-white/8 bg-white/3 px-3.5 py-2.5">
-            <p class="text-xs text-slate-500 mb-0.5">Gross Total</p>
-            <p class="text-sm font-semibold text-slate-300">RM {{ grossPreview() | number:'1.2-2' }}</p>
+            <p class="text-xs text-slate-500 mb-0.5">Net Investment</p>
+            <p class="text-sm font-semibold text-slate-300">RM {{ netInvestmentPreview() | number:'1.2-2' }}</p>
           </div>
           <div class="rounded-xl border border-white/8 bg-white/3 px-3.5 py-2.5">
-            <p class="text-xs text-slate-500 mb-0.5">Net Total</p>
-            <p class="text-sm font-semibold text-white">RM {{ netPreview() | number:'1.2-2' }}</p>
+            <p class="text-xs text-slate-500 mb-0.5">Total Amount</p>
+            <p class="text-sm font-semibold text-white">RM {{ totalAmountPreview() | number:'1.2-2' }}</p>
           </div>
         </div>
 
@@ -133,7 +133,7 @@
           <p class="text-xs text-slate-500 mt-0.5">All buy and sell activity for this fund.</p>
         </div>
         <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">
-          Total Net: RM {{ totalNetInvested() | number:'1.2-2' }}
+          Net Invested: RM {{ totalNetInvestmentAmount() | number:'1.2-2' }}
         </span>
       </div>
 
@@ -146,8 +146,8 @@
               <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit</th>
               <th class="text-right px-4 py-3 font-semibold bg-white/3">Unit Price</th>
               <th class="text-right px-4 py-3 font-semibold bg-white/3">Sales Charge</th>
-              <th class="text-right px-4 py-3 font-semibold bg-white/3">Gross</th>
-              <th class="text-right px-5 py-3 font-semibold bg-white/3">Net</th>
+              <th class="text-right px-4 py-3 font-semibold bg-white/3">Net Invested</th>
+              <th class="text-right px-5 py-3 font-semibold bg-white/3">Total Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5">
@@ -166,8 +166,8 @@
                 <td class="px-4 py-3.5 text-right text-xs text-slate-300">{{ txn.unit | number:'1.4-4' }}</td>
                 <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{ txn.unitPrice | number:'1.4-4' }}</td>
                 <td class="px-4 py-3.5 text-right text-xs text-slate-500">RM {{ txn.salesCharge | number:'1.2-2' }}</td>
-                <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{ txn.grossTotalPrice | number:'1.2-2' }}</td>
-                <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">RM {{ txn.netTotalPrice | number:'1.2-2' }}</td>
+                <td class="px-4 py-3.5 text-right text-xs text-slate-300">RM {{ txn.netInvestmentAmount | number:'1.2-2' }}</td>
+                <td class="px-5 py-3.5 text-right text-xs font-semibold text-white">RM {{ txn.totalAmount | number:'1.2-2' }}</td>
               </tr>
             } @empty {
               <tr>
