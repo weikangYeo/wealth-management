@@ -47,7 +47,7 @@ type incomeDistItem struct {
 	IncomeDist  float64 `json:"IncomeDist"`
 }
 
-func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*NavResult, error) {
+func (p *AhamFundProvider) FetchNavByDate(scrapeParamValue string, date time.Time) (*NavResult, error) {
 	u, err := url.Parse(ahamBaseURL)
 	if err != nil {
 		return nil, err
@@ -60,10 +60,10 @@ func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*Nav
 	queryParam.Set("action", "product_nav_historical")
 	queryParam.Set("from_date", formatedFromDate)
 	queryParam.Set("to_date", formatedToDate)
-	queryParam.Set("pf_code", fundCode)
+	queryParam.Set("pf_code", scrapeParamValue)
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
-	log.Printf("Fetching %s from %s\n", fundCode, u.String())
+	log.Printf("Fetching %s from %s\n", scrapeParamValue, u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -87,13 +87,12 @@ func (p *AhamFundProvider) FetchNavByDate(fundCode string, date time.Time) (*Nav
 		return nil, err
 	}
 	return &NavResult{
-		FundCode: fundCode,
-		NavDate:  navDate,
-		Nav:      price,
+		NavDate: navDate,
+		Nav:     price,
 	}, nil
 }
 
-func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string, fromDate time.Time) ([]DistributionResult, error) {
+func (p *AhamFundProvider) FetchIncomeDistribution(scrapeParamValue string, fromDate time.Time) ([]DistributionResult, error) {
 	filteredFromDate := ""
 	if !fromDate.IsZero() {
 		filteredFromDate = fromDate.Format("2006-01-02")
@@ -105,7 +104,7 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string, fromDate tim
 	queryParam := u.Query()
 	queryParam.Set("action", "income_distribution")
 	queryParam.Set("from_date", filteredFromDate)
-	queryParam.Set("pf_code", fundCode)
+	queryParam.Set("pf_code", scrapeParamValue)
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
 	if err != nil {
@@ -132,12 +131,11 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fundCode string, fromDate tim
 		}
 		incomeDist, err := decimal.SetFloat64(v.IncomeDist)
 		if err != nil {
-			log.Printf("Error parsing incomeDist %s, error: %v", v.IncomeDist, err)
+			log.Printf("Error parsing incomeDist %v, error: %v", v.IncomeDist, err)
 			continue
 		}
 
 		item := DistributionResult{
-			FundCode:    fundCode,
 			DeclareDate: declareDate,
 			PaymentDate: paymentDate,
 			SenPerUnit:  incomeDist,

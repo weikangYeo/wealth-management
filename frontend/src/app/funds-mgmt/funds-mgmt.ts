@@ -20,11 +20,11 @@ export class FundsMgmt {
   protected funds = signal<Fund[]>([]);
   protected fundCount = computed(() => this.funds().length);
 
-  protected saveFundProfile(fundCode: string, name: string, url: string) {
+  protected saveFundProfile(fundCode: string, name: string, fsmUrl: string) {
     if (!fundCode || !name) {
       return;
     }
-    const fundReq = {fundCode, name, url};
+    const fundReq = {fundCode, name, fsmUrl};
     this.fundService.addFundInfo(fundReq).subscribe({
         next: () => {
           this.snackBar.open('Fund Info added', 'OK', {

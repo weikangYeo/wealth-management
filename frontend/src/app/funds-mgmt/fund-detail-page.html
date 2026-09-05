@@ -15,10 +15,10 @@
       <div>
         <p class="text-xs font-bold uppercase tracking-widest text-indigo-400">{{ fund().fundCode }}</p>
         <h2 class="text-xl font-bold text-white mt-0.5">{{ fund().name }}</h2>
-        @if (fund().url) {
-          <a [href]="fund().url" target="_blank"
+        @if (fund().fsmUrl) {
+          <a [href]="fund().fsmUrl" target="_blank"
              class="text-xs text-slate-500 hover:text-indigo-400 transition-colors mt-1 inline-block">
-            {{ fund().url }} ↗
+            {{ fund().fsmUrl }} ↗
           </a>
         }
       </div>

@@ -9,10 +9,11 @@ import (
 )
 
 type Fund struct {
-	FundCode string `json:"fundCode"`
-	Name     string `json:"name"`
-	URL      string `json:"url"`
-	Provider string `json:"provider"`
+	FundCode         string `json:"fundCode"`
+	Name             string `json:"name"`
+	FsmURL           string `json:"fsmUrl"`
+	ScrapeParamValue string `json:"scrapeParamValue"`
+	Provider         string `json:"provider"`
 }
 
 type PriceHistory struct {

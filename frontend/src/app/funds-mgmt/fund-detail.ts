@@ -14,7 +14,7 @@ export class FundDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly fundService = inject(FundService);
 
-  protected fund = signal<Fund>({fundCode: '', name: '', url: ''});
+  protected fund = signal<Fund>({fundCode: '', name: '', fsmUrl: ''});
   protected transactions = signal<FundTxn[]>([]);
   protected fundCode = signal<string>('');
 

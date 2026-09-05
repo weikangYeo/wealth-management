@@ -73,9 +73,9 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
               scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
             - [x] Scrape fund dist base on latest data instead of always start from day 0
             - [ ] Fund House
-              - [X] Aham (Affin Hwang)
-              - [ ] Principal
-              - [ ] FSM other funds
+                - [X] Aham (Affin Hwang)
+                - [ ] Principal
+                - [ ] FSM other funds
         - [ ] Clean and Recompute all income distribution job (because one error would cause cumulative cal error later)
         - [ ] Aggregated result
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
@@ -126,5 +126,6 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
     - other fund house
+- Import Stock, golds, Funds info from desktop
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview

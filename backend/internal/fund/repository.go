@@ -18,7 +18,7 @@ func newRepository(db *sql.DB) *repository {
 }
 
 func (repo *repository) getAllFunds() ([]Fund, error) {
-	rows, err := repo.db.Query("SELECT fund_code, name, url, COALESCE(provider, '') FROM fund_info")
+	rows, err := repo.db.Query("SELECT fund_code, name, fsm_url, scrape_param_value, COALESCE(provider, '') FROM fund_info")
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (repo *repository) getAllFunds() ([]Fund, error) {
 	funds := make([]Fund, 0)
 	for rows.Next() {
 		var fund Fund
-		if err := rows.Scan(&fund.FundCode, &fund.Name, &fund.URL, &fund.Provider); err != nil {
+		if err := rows.Scan(&fund.FundCode, &fund.Name, &fund.FsmURL, &fund.ScrapeParamValue, &fund.Provider); err != nil {
 			return nil, err
 		}
 		funds = append(funds, fund)
@@ -40,8 +40,8 @@ func (repo *repository) getAllFunds() ([]Fund, error) {
 
 func (repo *repository) getFundInfo(fundCode string) (Fund, error) {
 	var fund Fund
-	err := repo.db.QueryRow("SELECT fund_code, name, url FROM fund_info where fund_code=? ", fundCode).
-		Scan(&fund.FundCode, &fund.Name, &fund.URL)
+	err := repo.db.QueryRow("SELECT fund_code, name, fsm_url FROM fund_info where fund_code=? ", fundCode).
+		Scan(&fund.FundCode, &fund.Name, &fund.FsmURL)
 	if err != nil {
 		return fund, err
 	}
@@ -54,12 +54,12 @@ func (repo *repository) insertFund(fund Fund) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare("INSERT INTO fund_info(fund_code, name, url) VALUES (?, ?, ?)")
+	stmt, err := tx.Prepare("INSERT INTO fund_info(fund_code, name, fsm_url, scrape_param_value, provider) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(fund.FundCode, fund.Name, fund.URL)
+	_, err = stmt.Exec(fund.FundCode, fund.Name, fund.FsmURL, fund.ScrapeParamValue, fund.Provider)
 	if err != nil {
 		return err
 	}

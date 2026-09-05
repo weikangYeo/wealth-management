@@ -25,6 +25,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 
 	var scraperByProvider = map[string]provider.FundDataProvider{
 		"AHAM": &provider.AhamFundProvider{},
+		// todo register PRINCIPAL once PrincipalFundProvider is implemented
 	}
 
 	for _, fund := range funds {
@@ -35,7 +36,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 		}
 		log.Printf("Scraping fund %s with provider %s\n", fund.Name, fund.Provider)
 		// Get today NAV
-		nav, err := scraper.FetchNavByDate(fund.FundCode, time.Now())
+		nav, err := scraper.FetchNavByDate(fund.ScrapeParamValue, time.Now())
 		if err != nil {
 			log.Printf("Error while scrape nav of %s: %s\n", fund.Provider, err.Error())
 			continue
@@ -56,7 +57,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 		if !ok {
 			continue
 		}
-		incomeDistributions, err := scraper.FetchIncomeDistribution(fund.FundCode, startDate)
+		incomeDistributions, err := scraper.FetchIncomeDistribution(fund.ScrapeParamValue, startDate)
 		if err != nil {
 			log.Printf("Error fetching income distribution of %s: %s\n", fund.FundCode, err.Error())
 			continue
@@ -85,7 +86,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 				log.Printf("Error calculating total dividend payout of %s: %s\n", fund.FundCode, err.Error())
 				break
 			}
-			navResult, err := scraper.FetchNavByDate(fund.FundCode, d.PaymentDate)
+			navResult, err := scraper.FetchNavByDate(fund.ScrapeParamValue, d.PaymentDate)
 			if err != nil {
 				log.Printf("Error fetching nav of %s to calculate dividend payout: %s\n", fund.FundCode, err.Error())
 				break

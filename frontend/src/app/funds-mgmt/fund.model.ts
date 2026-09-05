@@ -3,7 +3,8 @@ export type FundTxnType = 'BUY' | 'SELL';
 export interface Fund {
   fundCode: string;
   name: string;
-  url: string;
+  fsmUrl: string;
+  scrapeParamValue?: string;
 }
 
 export interface FundTxn extends FundTxnReq{
