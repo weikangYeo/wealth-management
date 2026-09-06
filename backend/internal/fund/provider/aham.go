@@ -25,7 +25,6 @@ func decodeJSON(r io.Reader, v any) error {
 	return json.Unmarshal(body, v)
 }
 
-// todo test
 type AhamFundProvider struct {
 }
 
@@ -47,6 +46,7 @@ type incomeDistItem struct {
 	IncomeDist  float64 `json:"IncomeDist"`
 }
 
+// todo add unit test
 func (p *AhamFundProvider) FetchNavByDate(scrapeParamValue string, date time.Time) (*NavResult, error) {
 	u, err := url.Parse(ahamBaseURL)
 	if err != nil {
@@ -92,6 +92,7 @@ func (p *AhamFundProvider) FetchNavByDate(scrapeParamValue string, date time.Tim
 	}, nil
 }
 
+// todo add unit test
 func (p *AhamFundProvider) FetchIncomeDistribution(scrapeParamValue string, fromDate time.Time) ([]DistributionResult, error) {
 	filteredFromDate := ""
 	if !fromDate.IsZero() {

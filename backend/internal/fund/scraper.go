@@ -24,8 +24,8 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 	}
 
 	var scraperByProvider = map[string]provider.FundDataProvider{
-		"AHAM": &provider.AhamFundProvider{},
-		// todo register PRINCIPAL once PrincipalFundProvider is implemented
+		"AHAM":      &provider.AhamFundProvider{},
+		"PRINCIPAL": &provider.PrincipalFundProvider{},
 	}
 
 	for _, fund := range funds {
@@ -65,7 +65,6 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 		slices.SortFunc(incomeDistributions, func(a, b provider.DistributionResult) int {
 			return a.PaymentDate.Compare(b.PaymentDate)
 		})
-		// todo compute reinvestment txn
 		ctx := apd.BaseContext.WithPrecision(14)
 		for _, d := range incomeDistributions {
 			// change sen to RM, e.g. 50 sen to RM 0.5
