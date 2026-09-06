@@ -43,29 +43,24 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 
 ## TODO
 
-- [ ] Makefile
-- [ ] Dashboard
-- [ ] Drag & Drop Widget
-- [ ] Widget
-    - [ ] P&L
-    - [ ] annualized return
-    - [ ] calendar return
-    - [ ] Investment type
-        - [ ] Gold
-        - [ ] Funds
-        - [ ] Stock (CARD BASE)
-            - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
-        - [ ] Cash
-- [ ] MCP support, allow AI to manipulate data for me, such as run
-- [ ] Run script to start everything via a script, and set it as win/mac service so it auto start
-    - [ ] local domain name so it can be navigated via url
-- [ ] Modules
+- [ ] Main Modules
     - [ ] Wealth Overview
+        - [ ] Widget
+        - [ ] P&L
+        - [ ] annualized return
+        - [ ] calendar return
+        - [ ] Investment type
+            - [ ] Gold
+            - [ ] Funds
+            - [ ] Stock (CARD BASE)
+                - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
+            - [ ] Cash
     - [X] Gold
         - [X] Import/Export
             - [X] Upsert Gold Txn
         - [X] View and aggregated info
-        - [ ] Scrape gold price by banks
+        - [X] Scrape gold price
+        - [ ] Support more than 1 gold price providers by banks/seller of gold
     - [ ] Funds
         - [X] CRUD
         - [ ] Scrapper
@@ -93,6 +88,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
             - [x] Scrape Stock Price from bursa
             - [x] Scrape Stock Price from klse screener
             - [x] set Scrape Stock Price from klse screener
+            - [ ] Scrape News that might relate or might affect the stock
         - [X] Scrape Dividend info, so dont have to manual insert dividend every time
             - [X] add withholding tax if it is REIT
         - [X] Dividend Input fields (Stepper component)
@@ -100,25 +96,25 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
         - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
         - [ ] GET Stock API to include DY or other aggregated info I interested the most
         - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
-- [ ] Onboard Data (to this system) and back up
 - [ ] Watch list
-- [ ] Performance enhancement, read table for aggregated data?
-- [ ] Revamp UI
-- [ ] "Fun" Part - Web Scrapper
-    - [ ] Funds Info & Price
-    - [ ] Stock info
-    - [X] Stock info & Price
-    - [X] Gold Price
-    - [ ] News that might relate
     - [ ] The ETL process of web scraped data and how to process it
-- [ ] Based on scrapped info, feed to LLM to provide suggestion
+- [ ] AI suggestion, based on scrapped info, feed to LLM to provide suggestion
     - [ ] compare LLM rules and custom defined (by dev) rules
-- [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
-- [ ] Host public
-    - Azure Static Web Apps (FE, free forever) + Azure App Service F1 (Go/Java BE, free forever) + Neon or Supabase
-      (PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the App
-      Service CPU constraint.
-- [ ] Host privately in Home network
+- [ ] Tech Debts
+    - [ ] Makefile
+    - [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
+    - [ ] Host privately in Home network
+        - [ ] local domain name so it can be navigated via url
+    - [ ] Host public
+        - Azure Static Web Apps (FE, free forever) + Azure App Service F1 (Go/Java BE, free forever) + Neon or Supabase
+          (PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the
+          App Service CPU constraint.
+    - [X] Revamp UI
+    - [ ] Onboard Data (to this system) and back up
+    - [ ] Run script to start everything via a script
+    - [ ] register it as win/mac service so it auto start when pc boot
+    - [ ] MCP support, allow AI to manipulate data for me, such as run
+    - [ ] Performance enhancement, read table for aggregated data?
 
 ## Note for future self
 
