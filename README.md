@@ -115,6 +115,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] register it as win/mac service so it auto start when pc boot
     - [ ] MCP support, allow AI to manipulate data for me, such as run
     - [ ] Performance enhancement, read table for aggregated data?
+    - [ ] Vault/KV server to before host (probably package it and deploy as side-car container)
 
 ## Note for future self
 
@@ -122,6 +123,12 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
     - other fund house
+      - TA
+        - pdftoText, read txt file line by line (reverse engineer to read data, since we dont have reliable site to scrape)
+        - scrape nav price from static html page (goquery)
+    - test with real data with full run 
+      - principal
+      - TA
 - Import Stock, golds, Funds info from desktop
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview

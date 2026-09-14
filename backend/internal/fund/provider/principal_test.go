@@ -22,7 +22,7 @@ func TestParseNavResult(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	navResult, err := parseNavFromHtml(doc)
+	navResult, err := PrincipalFundProvider{}.parseNavFromHtml(doc)
 	if err != nil {
 		t.Fatal(err)
 	}

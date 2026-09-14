@@ -17,8 +17,8 @@ type PrincipalFundProvider struct {
 
 const principalBaseUrl = "https://www.principal.com.my/en/"
 
-func (p PrincipalFundProvider) FetchNavByDate(scrapeParamValue string, date time.Time) (*NavResult, error) {
-	u, err := url.Parse(principalBaseUrl + scrapeParamValue)
+func (p PrincipalFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult, error) {
+	u, err := url.Parse(principalBaseUrl + fund.ScrapeParamValue)
 	if err != nil {
 		return nil, err
 	}
@@ -28,10 +28,9 @@ func (p PrincipalFundProvider) FetchNavByDate(scrapeParamValue string, date time
 	queryParam := u.Query()
 	queryParam.Set("field_fund_nav_date_value[min]", formatedFromDate)
 	queryParam.Set("field_fund_nav_date_value[max]", formatedToDate)
-	queryParam.Encode()
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
-	log.Printf("Fetching %s from %s\n", scrapeParamValue, u.String())
+	log.Printf("Fetching %s from %s\n", fund.ScrapeParamValue, u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -41,24 +40,23 @@ func (p PrincipalFundProvider) FetchNavByDate(scrapeParamValue string, date time
 	if err != nil {
 		return nil, err
 	}
-	return parseNavFromHtml(doc)
+	return p.parseNavFromHtml(doc)
 
 }
 
-func (p PrincipalFundProvider) FetchIncomeDistribution(scrapeParamValue string, fromDate time.Time) ([]DistributionResult, error) {
+func (p PrincipalFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time) ([]DistributionResult, error) {
 	// Principal funds, at least the one i'm holding, rarely have income dist,
 	// main holding are put in bond funds and index funds
-	u, err := url.Parse(principalBaseUrl + scrapeParamValue)
+	u, err := url.Parse(principalBaseUrl + fund.ScrapeParamValue)
 	if err != nil {
 		return nil, err
 	}
 	formatedFromDate := fromDate.Format("01-02-2006")
 	queryParam := u.Query()
 	queryParam.Set("field_fund_nav_date_value[min]", formatedFromDate)
-	queryParam.Encode()
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
-	log.Printf("Fetching %s from %s\n", scrapeParamValue, u.String())
+	log.Printf("Fetching %s from %s\n", fund.ScrapeParamValue, u.String())
 	defer resp.Body.Close()
 	// Body is a html page
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
@@ -68,7 +66,7 @@ func (p PrincipalFundProvider) FetchIncomeDistribution(scrapeParamValue string, 
 	return parseIncomeDistFromHtml(doc)
 }
 
-func parseNavFromHtml(doc *goquery.Document) (*NavResult, error) {
+func (p PrincipalFundProvider) parseNavFromHtml(doc *goquery.Document) (*NavResult, error) {
 	// first time tag show latest nav datetime str
 	timeTagSelector := doc.Find("time")
 	navDateTimeStr, ok := timeTagSelector.Attr("datetime")

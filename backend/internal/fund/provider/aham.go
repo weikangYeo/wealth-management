@@ -47,7 +47,7 @@ type incomeDistItem struct {
 }
 
 // todo add unit test
-func (p *AhamFundProvider) FetchNavByDate(scrapeParamValue string, date time.Time) (*NavResult, error) {
+func (p *AhamFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult, error) {
 	u, err := url.Parse(ahamBaseURL)
 	if err != nil {
 		return nil, err
@@ -60,10 +60,10 @@ func (p *AhamFundProvider) FetchNavByDate(scrapeParamValue string, date time.Tim
 	queryParam.Set("action", "product_nav_historical")
 	queryParam.Set("from_date", formatedFromDate)
 	queryParam.Set("to_date", formatedToDate)
-	queryParam.Set("pf_code", scrapeParamValue)
+	queryParam.Set("pf_code", fund.ScrapeParamValue)
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
-	log.Printf("Fetching %s from %s\n", scrapeParamValue, u.String())
+	log.Printf("Fetching %s from %s\n", fund.ScrapeParamValue, u.String())
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (p *AhamFundProvider) FetchNavByDate(scrapeParamValue string, date time.Tim
 }
 
 // todo add unit test
-func (p *AhamFundProvider) FetchIncomeDistribution(scrapeParamValue string, fromDate time.Time) ([]DistributionResult, error) {
+func (p *AhamFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time) ([]DistributionResult, error) {
 	filteredFromDate := ""
 	if !fromDate.IsZero() {
 		filteredFromDate = fromDate.Format("2006-01-02")
@@ -105,7 +105,7 @@ func (p *AhamFundProvider) FetchIncomeDistribution(scrapeParamValue string, from
 	queryParam := u.Query()
 	queryParam.Set("action", "income_distribution")
 	queryParam.Set("from_date", filteredFromDate)
-	queryParam.Set("pf_code", scrapeParamValue)
+	queryParam.Set("pf_code", fund.ScrapeParamValue)
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
 	if err != nil {
