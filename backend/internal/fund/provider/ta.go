@@ -36,18 +36,39 @@ func (p TaFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult
 	if err != nil {
 		return nil, err
 	}
-
-	return p.parseNavFromHtml(doc)
+	return p.parseNavFromHtml(doc, fund.Name)
 }
 
-func FetchIncomeDistribution(fund FundRef, fromDate time.Time) ([]DistributionResult, error) {
+func (p TaFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time) ([]DistributionResult, error) {
 	return nil, fmt.Errorf("FetchIncomeDistribution not yet implemented")
 }
 
 // make it as function receiver, so it will be private to TaFundProvider,
 // else it would be package visible
-func (p TaFundProvider) parseNavFromHtml(doc *goquery.Document) (*NavResult, error) {
-	return nil, fmt.Errorf("parseNavFromHtml not yet implemented")
+func (p TaFundProvider) parseNavFromHtml(doc *goquery.Document, fundName string) (*NavResult, error) {
+	var result NavResult
+	var parseErr error
+	doc.Find("td").EachWithBreak(func(i int, s *goquery.Selection) bool {
+		scrapedFundName := strings.ToUpper(strings.TrimSpace(s.Text()))
+		if scrapedFundName == strings.ToUpper(fundName) {
+			navDate, err := time.Parse("02/01/2006", s.Next().Text())
+			if err != nil {
+				parseErr = err
+				return false
+			}
+			nav, err := decimal.ToDecimal(s.Next().Next().Text())
+			if err != nil {
+				parseErr = err
+				return false
+			}
+			result = NavResult{
+				Nav:     nav,
+				NavDate: navDate,
+			}
+		}
+		return true
+	})
+	return &result, parseErr
 }
 
 func (p TaFundProvider) parseIncomeDistFromTextFile(r io.Reader) ([]DistributionResult, error) {

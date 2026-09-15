@@ -32,7 +32,7 @@ func TestParseNavResult(t *testing.T) {
 
 	expected, _, _ := apd.NewFromString("0.9180")
 	if navResult.Nav.Cmp(expected) != 0 {
-		t.Errorf("Nav = %v, want 2026-09-03", navResult.Nav)
+		t.Errorf("Nav = %v, want 0.9180", navResult.Nav)
 	}
 }
 

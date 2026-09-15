@@ -5,8 +5,33 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/cockroachdb/apd/v3"
 )
+
+func TestParseNavFromHtml(t *testing.T) {
+	file, err := os.Open("testdata/ta_nav_page.html")
+	if err != nil {
+		t.Errorf("could not open testdata/ta_nav_page.html, %v", err)
+	}
+	defer file.Close()
+	doc, err := goquery.NewDocumentFromReader(file)
+	if err != nil {
+		t.Errorf("could not read testdata/ta_nav_page.html, %v", err)
+	}
+	navResult, err := TaFundProvider{}.parseNavFromHtml(doc, "TA GLOBAL TECHNOLOGY FUND MYR CLASS")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if navResult.NavDate.Format("2006-01-02") != "2026-08-05" {
+		t.Errorf("NavDate = %v, want 2026-08-05", navResult.NavDate)
+	}
+
+	expected, _, _ := apd.NewFromString("0.5813")
+	if navResult.Nav.Cmp(expected) != 0 {
+		t.Errorf("Nav = %v, want 0.5813", navResult.Nav)
+	}
+}
 
 func TestParseIncomeDistFromTextFile(t *testing.T) {
 	file, err := os.Open("testdata/tagtf-ffs-layout.txt")

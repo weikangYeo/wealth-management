@@ -26,6 +26,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 	var scraperByProvider = map[string]provider.FundDataProvider{
 		"AHAM":      &provider.AhamFundProvider{},
 		"PRINCIPAL": &provider.PrincipalFundProvider{},
+		"TA":        &provider.TaFundProvider{},
 	}
 
 	for _, fund := range funds {
