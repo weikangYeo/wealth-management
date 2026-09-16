@@ -75,10 +75,25 @@ calculations — never plain `float64` for prices/units/amounts.
 
 ### Fund scraping: provider strategy pattern
 
-`internal/fund/provider/provider.go` defines the `FundDataProvider` interface ( `FetchNavByDate`,
-`FetchIncomeDistribution`). Each fund house gets its own implementation under `internal/fund/provider/` (e.g.
-`aham.go`). `fund.ScrapeFundNavAndIncomeDist` (in `internal/fund/scraper.go`) looks up the right provider by the fund's
-`Provider` column and:
+`internal/fund/provider/provider.go` defines the `FundDataProvider` interface (`FetchNavByDate`,
+`FetchIncomeDistribution`), both taking a `FundRef{Name, ScrapeParamValue}` rather than a bare fund code. Not every
+provider uses every field — AHAM and Principal only need `ScrapeParamValue` (a `pf_code` query value / URL path
+fragment that addresses the fund directly); TA needs `Name` too, since its NAV source is a shared listing of ~500
+funds across multiple fund houses that has to be matched by display name rather than a direct per-fund address.
+`ScrapeParamValue` is stored on `fund_info.scrape_param_value`, independent of `fund_code` (the stable, human-chosen
+business identifier used for routing/display/FK — never repurposed as a scrape parameter) and `fsm_url` (the
+Fund Supermarket display link, unrelated to scraping).
+
+Each fund house gets its own implementation under `internal/fund/provider/`, and the three so far are genuinely
+different shapes — not a template to copy mechanically:
+- `aham.go` — a single JSON API, keyed by `pf_code`.
+- `principal.go` — server-rendered HTML, scraped with `goquery`.
+- `ta.go` — HTML (via `goquery`) for NAV, but income distribution requires downloading a PDF fact sheet and shelling
+  out to the external `pdftotext` binary (see Notes) to get parseable text, since PDF layout varies enough between
+  fund fact sheets that a pure-Go PDF text library wasn't reliable.
+
+`fund.ScrapeFundNavAndIncomeDist` (in `internal/fund/scraper.go`) looks up the right provider by the fund's `Provider`
+column and:
 
 1. fetches latest NAV and inserts into price history,
 2. fetches income distributions since the last processed date,
@@ -86,8 +101,9 @@ calculations — never plain `float64` for prices/units/amounts.
    distribution.
 
 This is incremental — it assumes prior transactions were computed correctly and only pulls/computes forward from the
-last known state (see `getIncomeDistPullStartDate`). When adding a new fund house provider, implement `FundDataProvider`
-and register it in the `scraperByProvider` map in `scraper.go`.
+last known state (see `getIncomeDistPullStartDate`). When adding a new fund house provider, implement
+`FundDataProvider`, register it in the `scraperByProvider` map in `scraper.go` — and if the interface itself no longer
+fits (as happened going from AHAM/Principal to TA), update this section along with it, not just the map registration.
 
 ### Fund transaction amounts: netInvestmentAmount vs totalAmount
 
@@ -135,3 +151,7 @@ handles outgoing API request concerns centrally.
 - The scraper depends on a locally installed Chrome/Chromium (`chromedp` drives an existing browser, it doesn't bundle
   one) — if scraper runs fail with an exec/launch error, check that a browser is installed before debugging the
   scraping logic itself.
+- TA's income-distribution scraping (`ta.go`) shells out to the `pdftotext` binary (poppler-utils —
+  `brew install poppler` / `apt install poppler-utils`) — a second external-tool dependency beyond Chrome. If TA
+  scraper runs fail with an `exec: "pdftotext": executable file not found` error, install poppler before debugging
+  further.

@@ -34,7 +34,7 @@ func ScrapeStockLastDonePrice(db *sql.DB) {
 
 func scrapeStockData(stockRepo *repository, s Stock) {
 	klseURL := os.Getenv("KLSE_STOCK_BASE_URL") + s.BursaStockId
-	html, err := scrape.GetHtmlStringFromUrl(klseURL)
+	html, err := scrape.GetHtmlStringFromUrlViaChrome(klseURL)
 	if err != nil {
 		log.Printf("KLSE scrape failed for %s: %v, falling back to old source", s.StockName, err)
 		scrapeAndSavePriceFromOldSource(stockRepo, s)
@@ -113,7 +113,7 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 
 func scrapeAndSavePriceFromOldSource(stockRepo *repository, s Stock) {
 	targetURL := os.Getenv("STOCK_URL") + "?stock_code=" + s.BursaStockId
-	html, err := scrape.GetHtmlStringFromUrl(targetURL)
+	html, err := scrape.GetHtmlStringFromUrlViaChrome(targetURL)
 	if err != nil {
 		log.Printf("Old source scrape failed for %s: %v", s.StockName, err)
 		return

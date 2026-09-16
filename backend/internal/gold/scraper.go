@@ -14,7 +14,7 @@ import (
 
 func ScrapeGoldPrice() {
 	targetURL := os.Getenv("GOLD_URL")
-	html, err := scrape.GetHtmlStringFromUrl(targetURL)
+	html, err := scrape.GetHtmlStringFromUrlViaChrome(targetURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func getTestingHtmlPage() string {
 
 func getHtmlPage() string {
 	targetURL := os.Getenv("GOLD_URL")
-	html, err := scrape.GetHtmlStringFromUrl(targetURL)
+	html, err := scrape.GetHtmlStringFromUrlViaChrome(targetURL)
 	if err != nil {
 		log.Fatal(err)
 	}

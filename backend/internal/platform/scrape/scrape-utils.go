@@ -10,7 +10,8 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-func GetHtmlStringFromUrl(targetURL string) (string, error) {
+// GetHtmlStringFromUrlViaChrome this is to use chrome to load page, so js can be run too (to by pass certain bot detection) logic
+func GetHtmlStringFromUrlViaChrome(targetURL string) (string, error) {
 	log.Printf("Scraping from %s", targetURL)
 
 	// chromedp: navigate, wait for content, grab HTML

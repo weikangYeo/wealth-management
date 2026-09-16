@@ -10,6 +10,7 @@ Install these before running the project:
 - **Docker + Docker Compose** — used to run the MySQL database (`devops/docker-compose.yml`). Check with `docker -v`.
 - **Chrome or Chromium installed locally** — the scraper (`backend/internal/platform/scrape`) drives an existing browser
   install via `chromedp`/headless Chrome; it does not bundle its own browser.
+- **poppler** to run `pdftotext` logic in scraper.
 
 ## Start project
 
