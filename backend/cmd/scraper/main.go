@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"wealth-management/internal/fund"
+	"wealth-management/internal/gold"
 	"wealth-management/internal/platform/config"
 	"wealth-management/internal/platform/database"
+	"wealth-management/internal/stock"
 )
 
 func main() {
@@ -17,7 +19,7 @@ func main() {
 		defer db.Close()
 	}
 	log.Println("Starting scraper")
-	//gold.ScrapeGoldPrice()
-	//stock.ScrapeStockLastDonePrice(db)
+	gold.ScrapeGoldPrice()
+	stock.ScrapeStockLastDonePrice(db)
 	fund.ScrapeFundNavAndIncomeDist(db)
 }

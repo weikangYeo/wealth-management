@@ -91,25 +91,3 @@ func getGoldPriceStrFromHtml(html string) string {
 	log.Println("buyPrice:", buyPrice)
 	return buyPrice
 }
-
-func getTestingHtmlPage() string {
-	log.Println("Scraping from local testing file")
-	filename := "../resources/test-material/scrape/gold_and_silver_price.html"
-	contentBytes, err := os.ReadFile(filename)
-
-	if err != nil {
-		log.Fatalf("unable to read file: %v", err)
-	}
-
-	// Convert the byte slice to a string
-	return string(contentBytes)
-}
-
-func getHtmlPage() string {
-	targetURL := os.Getenv("GOLD_URL")
-	html, err := scrape.GetHtmlStringFromUrlViaChrome(targetURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return html
-}

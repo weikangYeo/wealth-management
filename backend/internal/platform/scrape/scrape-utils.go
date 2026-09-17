@@ -19,7 +19,14 @@ func GetHtmlStringFromUrlViaChrome(targetURL string) (string, error) {
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("headless", true),
-		chromedp.Flag("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0"),
+		// CDP-driven Chrome sets navigator.webdriver = true by default, which bot detection
+		// (e.g. Imperva/Incapsula) checks directly. This flag disables the blink feature
+		// responsible for that, matching what a normal Chrome session reports.
+		chromedp.Flag("disable-blink-features", "AutomationControlled"),
+		// UA must claim Chrome/matching engine — the JS environment this actually runs
+		// (window.chrome, navigator.userAgentData, TLS fingerprint) is Chromium, so a
+		// non-Chrome UA (e.g. Firefox) is a header/runtime mismatch bot detection can flag.
+		chromedp.Flag("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
 	)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)

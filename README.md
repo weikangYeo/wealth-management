@@ -117,6 +117,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] MCP support, allow AI to manipulate data for me, such as run
     - [ ] Performance enhancement, read table for aggregated data?
     - [ ] Vault/KV server to before host (probably package it and deploy as side-car container)
+    - [ ] scrape url moving from .env back to static value in go file, since we are building logic base on a specific url only.
 
 ## Note for future self
 
@@ -124,9 +125,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
     - other fund house
-      - TA
-        - pdftoText, read txt file line by line (reverse engineer to read data, since we dont have reliable site to scrape)
-        - scrape nav price from static html page (goquery)
+      - Maybank
     - test with real data with full run 
       - principal
       - TA
