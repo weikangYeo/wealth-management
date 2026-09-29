@@ -152,7 +152,7 @@ func (repo *repository) getLatestReinvestmentTxn(fundCode string) (Txn, error) {
 	}
 	defer tx.Rollback()
 	var fundTxn Txn
-	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, net_investment_amount, total_amount, txn_type, remark FROM fund_txn WHERE fund_code=? AND txn_type =? ORDER BY txn_date ASC LIMIT 1",
+	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, net_investment_amount, total_amount, txn_type, remark FROM fund_txn WHERE fund_code=? AND txn_type =? ORDER BY txn_date DESC LIMIT 1",
 		fundCode, "REINVESTED").Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
 		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.NetInvestmentAmount,
 		&fundTxn.TotalAmount, &fundTxn.TxnType, &fundTxn.Remark)

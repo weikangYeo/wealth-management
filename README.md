@@ -65,13 +65,12 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] Funds
         - [X] CRUD
         - [ ] Scrapper
-            - [ ] Rethink, since fsm has bot detection, and manual import every time income distribution annouced is not
-              scalable, probably always do delta, to know how much gain I got, the source of truth just refer FSM
             - [x] Scrape fund dist base on latest data instead of always start from day 0
             - [ ] Fund House
                 - [X] Aham (Affin Hwang)
-                - [ ] Principal
-                - [ ] FSM other funds
+                - [X] Principal
+                - [X] TA
+                - [X] Maybank
         - [ ] Clean and Recompute all income distribution job (because one error would cause cumulative cal error later)
         - [ ] Aggregated result
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
@@ -116,19 +115,25 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] register it as win/mac service so it auto start when pc boot
     - [ ] MCP support, allow AI to manipulate data for me, such as run
     - [ ] Performance enhancement, read table for aggregated data?
+    - [ ] Performance enhancement, no-opt if duplicated run on the same day.
     - [ ] Vault/KV server to before host (probably package it and deploy as side-car container)
-    - [ ] scrape url moving from .env back to static value in go file, since we are building logic base on a specific url only.
+    - [ ] scrape url moving from .env back to static value in go file, since we are building logic base on a specific
+      url only.
 
 ## Note for future self
 
 ### Next todo
 
+- Performance enhancement, no-opt if duplicated run on the same day.
+
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
-    - other fund house
-      - Maybank
-    - test with real data with full run 
-      - principal
-      - TA
+    - test with real data with full run
+        - principal
+        - TA
+        - Maybank
+        - Offset RHB
 - Import Stock, golds, Funds info from desktop
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview
+- MCP, to interact with Claude
+    - Might need to do overall profolio APIs first

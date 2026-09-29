@@ -60,6 +60,7 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 		if !ok {
 			continue
 		}
+		log.Printf("Fetch Income Dist of %s from %s", fund.Name, startDate)
 		incomeDistributions, err := scraper.FetchIncomeDistribution(fundRef, startDate)
 		if err != nil {
 			log.Printf("Error fetching income distribution of %s: %s\n", fund.FundCode, err.Error())
@@ -88,11 +89,14 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 				log.Printf("Error calculating total dividend payout of %s: %s\n", fund.FundCode, err.Error())
 				break
 			}
+			// during payment date, IUTA use the income dist to re-invest
+			// there is a catch/iuta found during 2025 AHAM PRS record, where it use Declare Date + 2 NAV to compute dist.
 			navResult, err := scraper.FetchNavByDate(fundRef, d.PaymentDate)
 			if err != nil {
 				log.Printf("Error fetching nav of %s to calculate dividend payout: %s\n", fund.FundCode, err.Error())
 				break
 			}
+			log.Printf("Income Dist: %v\n", navResult)
 			reinvestedUnit := new(apd.Decimal)
 			_, err = ctx.Quo(reinvestedUnit, dividendPayout, navResult.Nav)
 			if err != nil {

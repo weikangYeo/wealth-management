@@ -3,6 +3,7 @@ package provider
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -60,7 +61,7 @@ func (p *AhamFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavRes
 	queryParam.Set("action", "product_nav_historical")
 	queryParam.Set("from_date", formatedFromDate)
 	queryParam.Set("to_date", formatedToDate)
-	queryParam.Set("pf_code", fund.ScrapeParamValue)
+	queryParam.Set("fund_code", fund.ScrapeParamValue)
 	u.RawQuery = queryParam.Encode()
 	resp, err := http.Get(u.String())
 	log.Printf("Fetching %s from %s\n", fund.ScrapeParamValue, u.String())
@@ -73,8 +74,10 @@ func (p *AhamFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavRes
 	if err := decodeJSON(resp.Body, &response); err != nil {
 		return nil, err
 	}
+	if len(response.Result) == 0 {
+		return nil, fmt.Errorf("no nav result for %s", fund.Name)
+	}
 	decimal := new(apd.Decimal)
-	log.Printf("Getting latest nav, last index of response")
 	latestNavRes := response.Result[len(response.Result)-1]
 	price, err := decimal.SetFloat64(latestNavRes.Nav)
 	if err != nil {
@@ -104,9 +107,10 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.T
 	}
 	queryParam := u.Query()
 	queryParam.Set("action", "income_distribution")
-	queryParam.Set("from_date", filteredFromDate)
+	queryParam.Set("from", filteredFromDate)
 	queryParam.Set("pf_code", fund.ScrapeParamValue)
 	u.RawQuery = queryParam.Encode()
+	log.Printf("Fetching income dist of %s from %s\n", fund.Name, u.String())
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, err
@@ -117,7 +121,6 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.T
 		return nil, err
 	}
 
-	decimal := new(apd.Decimal)
 	var result []DistributionResult
 	for _, v := range response.Result {
 		declareDate, err := time.Parse("2006-01-02", v.DeclareDate)
@@ -130,6 +133,7 @@ func (p *AhamFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.T
 			log.Printf("Error parsing paymentDate %s, error: %v", v.PaymentDate, err)
 			continue
 		}
+		decimal := new(apd.Decimal)
 		incomeDist, err := decimal.SetFloat64(v.IncomeDist)
 		if err != nil {
 			log.Printf("Error parsing incomeDist %v, error: %v", v.IncomeDist, err)

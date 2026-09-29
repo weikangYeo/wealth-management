@@ -73,6 +73,13 @@ Each feature package (`fund`, `gold`, `stock`) follows the same internal shape: 
 Money/quantity values use `github.com/cockroachdb/apd/v3` (arbitrary-precision decimal) throughout models and
 calculations — never plain `float64` for prices/units/amounts.
 
+**`apd` footgun**: `Decimal.Set*` methods (`SetFloat64`, `SetString`, etc.) mutate the receiver *in place* and return
+that same pointer — they don't allocate a new one. Never declare a `*apd.Decimal` once outside a loop and reuse it via
+`Set*` each iteration when building a slice of results: every element ends up aliasing the *same* object, silently
+frozen at the last iteration's value once the loop ends. (This exact bug existed in `aham.go`'s
+`FetchIncomeDistribution` — every `DistributionResult.SenPerUnit` pointed at one shared `Decimal`, so every historical
+distribution silently used the most recent one's rate. Fixed by allocating fresh per iteration.)
+
 ### Fund scraping: provider strategy pattern
 
 `internal/fund/provider/provider.go` defines the `FundDataProvider` interface (`FetchNavByDate`,
@@ -105,6 +112,12 @@ last known state (see `getIncomeDistPullStartDate`). When adding a new fund hous
 `FundDataProvider`, register it in the `scraperByProvider` map in `scraper.go` — and if the interface itself no longer
 fits (as happened going from AHAM/Principal to TA), update this section along with it, not just the map registration.
 
+In practice, this means dividend payout (`rate × totalUnitToDate`, see `getTotalUnitToDate` in `repository.go`) is
+only as correct as the fund's full `BUY`/`SELL` history — a duplicate or fee-incomplete manually-entered `BUY` row for
+that `fund_code` silently inflates every subsequent `REINVESTED` row computed from it. If a fund's reinvested amounts
+look systematically off by a clean multiple (e.g. ~2×) against an external statement, check for duplicate/incomplete
+rows in `fund_txn` before suspecting the provider's scraping logic.
+
 ### Fund transaction amounts: netInvestmentAmount vs totalAmount
 
 `Txn` (`internal/fund/model.go`) has two derived money fields that are easy to conflate:
@@ -123,10 +136,17 @@ the two in sync if the formula changes. `netInvestmentAmount` is what feeds "avg
 
 ### Scraping infra
 
-`internal/platform/scrape.GetHtmlStringFromUrl` drives headless Chrome via chromedp to fetch a page's rendered HTML
-(used for sources that need JS execution or have bot/challenge detection), including basic detection of
+`internal/platform/scrape.GetHtmlStringFromUrlViaChrome` drives headless Chrome via chromedp to fetch a page's
+rendered HTML (used for sources that need JS execution or have bot/challenge detection), including basic detection of
 challenge/captcha pages in the response. Feature scrapers (`gold`, `stock`, fund providers) build on this rather than
 issuing raw HTTP requests, since target sites often block naive scraping.
+
+Against real bot detection (Imperva/Incapsula-style WAFs, confirmed working against a live-protected fund page — see
+`scrape-utils_test.go`'s `TestGetHtmlStringFromUrlViaChrome`, a live-network check you can repoint at a new URL),
+two flags matter beyond just running headless Chrome: `disable-blink-features=AutomationControlled` (CDP-driven Chrome
+otherwise exposes `navigator.webdriver = true`, a direct signal these WAFs check) and setting the `user-agent` to
+match the *actual* engine (a UA claiming a different browser than what's really running, e.g. Firefox while Chromium
+executes the JS challenge, is itself a bot-detection signal).
 
 ### Database
 
@@ -134,6 +154,12 @@ MySQL, schema managed via numbered `golang-migrate` migration pairs (`N_descript
 `devops/database/migrations`. Migrations are applied automatically by `database.InitDbConnection(true)` when the server
 starts (the scraper binary calls `InitDbConnection(false)` and does not run migrations). Table names are lowercased
 (`--lower_case_table_names=1` in docker-compose).
+
+One-off manual data fixes (e.g. reconstructing/correcting historical `fund_txn` rows for a specific fund) are plain,
+**uncommitted** `.sql` files in the project root — never under `devops/database/migrations/`, since those auto-run on
+every server boot and a one-off fix there would misfire (run once as a migration, or run every boot forever, never
+"run once, whenever"). Apply manually, e.g.
+`mysql -h 127.0.0.1 -P 3307 -u <DBUSER> -p wealth_management < fix.sql`, and delete the file once applied.
 
 ### Frontend
 
