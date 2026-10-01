@@ -3,6 +3,7 @@ package fund
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"slices"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"github.com/cockroachdb/apd/v3"
 	"github.com/google/uuid"
 )
+
+var errNoTxn = errors.New("no transaction found")
 
 // ScrapeFundNavAndIncomeDist pull nav and income dist, and compute REINVESTED transaction.
 // this function assumes previous transaction was computed correctly and it will be a incremental compute.
