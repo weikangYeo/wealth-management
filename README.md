@@ -125,7 +125,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 ### Next todo
 
 - Performance enhancement, no-opt if duplicated run on the same day.
-
+- Add Unit test to fund/scraper.go funcs, especially income dist
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
     - test with real data with full run
         - principal

@@ -23,6 +23,7 @@ type DistributionResult struct {
 // to match a row in its shared NAV listing and ScrapeParamValue for its per-fund
 // page/PDF path.
 type FundRef struct {
+	FundCode         string
 	Name             string
 	ScrapeParamValue string
 }

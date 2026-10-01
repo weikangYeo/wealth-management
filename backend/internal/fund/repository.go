@@ -89,6 +89,13 @@ func (repo *repository) getFundTxnByFundCode(fundCode string) ([]Txn, error) {
 	return fundTxns, nil
 }
 
+func (repo *repository) isReinvestedTxnExists(fundCode string, txnDate time.Time) (bool, error) {
+	var exists bool
+	err := repo.db.QueryRow(`select EXISTS(select 1 from fund_info where fund_code=? and txn_date=? and txn_type='REINVESTED')`,
+		fundCode, txnDate).Scan(exists)
+	return exists, err
+}
+
 func (repo *repository) insertFundTxn(fundTxn Txn) error {
 	tx, err := repo.db.Begin()
 	if err != nil {

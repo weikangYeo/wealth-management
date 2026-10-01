@@ -37,112 +37,139 @@ func ScrapeFundNavAndIncomeDist(db *sql.DB) {
 			continue
 		}
 		log.Printf("Scraping fund %s with provider %s\n", fund.Name, fund.Provider)
-		fundRef := provider.FundRef{Name: fund.Name, ScrapeParamValue: fund.ScrapeParamValue}
-		// Get today NAV
-		nav, err := scraper.FetchNavByDate(fundRef, time.Now())
-		if err != nil {
-			log.Printf("Error while scrape nav of %s: %s\n", fund.Provider, err.Error())
-			continue
+		fundRef := provider.FundRef{
+			FundCode:         fund.FundCode,
+			Name:             fund.Name,
+			ScrapeParamValue: fund.ScrapeParamValue,
 		}
-		priceHistory := PriceHistory{
-			FundCode:  fund.FundCode,
-			PriceDate: nav.NavDate,
-			Nav:       *nav.Nav,
+		if err := scrapeNav(fundRepo, scraper, fundRef); err != nil {
+			log.Printf("Error while scraping fund nav %s due to %s. Proceed to scrape income dist if any.\n", fund.Name, err.Error())
 		}
-		log.Printf("Insert latest nav to table: %v", priceHistory)
-		if err := fundRepo.insertIgnoreFundPriceHistory(priceHistory); err != nil {
-			log.Printf("Error inserting nav of %s: %s\n", fund.Provider, err.Error())
-			continue
-		}
-
-		// Get Income Distribution from last pulled data up till today
-		startDate, ok := getIncomeDistPullStartDate(fundRepo, fund.FundCode)
-		if !ok {
-			continue
-		}
-		log.Printf("Fetch Income Dist of %s from %s", fund.Name, startDate)
-		incomeDistributions, err := scraper.FetchIncomeDistribution(fundRef, startDate)
-		if err != nil {
-			log.Printf("Error fetching income distribution of %s: %s\n", fund.FundCode, err.Error())
-			continue
-		}
-		slices.SortFunc(incomeDistributions, func(a, b provider.DistributionResult) int {
-			return a.PaymentDate.Compare(b.PaymentDate)
-		})
-		ctx := apd.BaseContext.WithPrecision(14)
-		for _, d := range incomeDistributions {
-			// change sen to RM, e.g. 50 sen to RM 0.5
-			ringgitPerUnit := new(apd.Decimal)
-			_, err = ctx.Quo(ringgitPerUnit, d.SenPerUnit, apd.New(100, 0))
-			if err != nil {
-				log.Printf("Error calculating total dividend payout of %s: %s\n", fund.FundCode, err.Error())
-				break
-			}
-			totalUnit, err := fundRepo.getTotalUnitToDate(fund.FundCode, d.DeclareDate)
-			if err != nil {
-				log.Printf("Error getting total unit of %s: %s\n", fund.FundCode, err.Error())
-				break
-			}
-			dividendPayout := new(apd.Decimal)
-			_, err = ctx.Mul(dividendPayout, ringgitPerUnit, totalUnit)
-			if err != nil {
-				log.Printf("Error calculating total dividend payout of %s: %s\n", fund.FundCode, err.Error())
-				break
-			}
-			// during payment date, IUTA use the income dist to re-invest
-			// there is a catch/iuta found during 2025 AHAM PRS record, where it use Declare Date + 2 NAV to compute dist.
-			navResult, err := scraper.FetchNavByDate(fundRef, d.PaymentDate)
-			if err != nil {
-				log.Printf("Error fetching nav of %s to calculate dividend payout: %s\n", fund.FundCode, err.Error())
-				break
-			}
-			log.Printf("Income Dist: %v\n", navResult)
-			reinvestedUnit := new(apd.Decimal)
-			_, err = ctx.Quo(reinvestedUnit, dividendPayout, navResult.Nav)
-			if err != nil {
-				log.Printf("Error calculating reinvested unit of %s: %s\n", fund.FundCode, err.Error())
-				break
-			}
-
-			reinvestedTxn := Txn{
-				ID:                  uuid.NewString(),
-				FundCode:            fund.FundCode,
-				TxnDate:             d.PaymentDate,
-				Unit:                *reinvestedUnit,
-				UnitPrice:           *navResult.Nav,
-				SalesCharge:         *apd.New(0, 0),
-				NetInvestmentAmount: *dividendPayout,
-				TotalAmount:         *apd.New(0, 0),
-				TxnType:             "REINVESTED",
-				Remark:              "REINVESTED",
-			}
-			err = fundRepo.insertFundTxn(reinvestedTxn)
-			if err != nil {
-				log.Printf("Error inserting reinvested txn of %s: %s\n", fund.FundCode, err.Error())
-				break
-			}
+		if err := scrapeIncomeDist(fundRepo, scraper, fundRef); err != nil {
+			log.Printf("Error while scraping fund income dist %s due to %s.\n", fundRef.Name, err.Error())
 		}
 	}
 }
 
-func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Time, bool) {
+func scrapeNav(fundRepo *repository, scraper provider.FundDataProvider, fundRef provider.FundRef) error {
+	// Get today NAV
+	nav, err := scraper.FetchNavByDate(fundRef, time.Now())
+	if err != nil {
+		return fmt.Errorf("error when fetch nav by date %s: %w", time.Now(), err)
+	}
+	priceHistory := PriceHistory{
+		FundCode:  fundRef.FundCode,
+		PriceDate: nav.NavDate,
+		Nav:       *nav.Nav,
+	}
+	log.Printf("Insert latest nav to table: %v", priceHistory)
+	if err := fundRepo.insertIgnoreFundPriceHistory(priceHistory); err != nil {
+		return fmt.Errorf("error when insert fund price history %v: %w", priceHistory, err)
+	}
+	return nil
+}
+
+// todo add test
+func scrapeIncomeDist(fundRepo *repository, scraper provider.FundDataProvider, fundRef provider.FundRef) error {
+	// Get Income Distribution from last pulled data up till today
+	startDate, err := getIncomeDistPullStartDate(fundRepo, fundRef.FundCode)
+	if errors.Is(err, errNoTxn) {
+		// no txn, just skip income dist computation.
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	log.Printf("Fetch Income Dist of %s from %s", fundRef.Name, startDate)
+	incomeDistributions, err := scraper.FetchIncomeDistribution(fundRef, startDate)
+	if err != nil {
+		return err
+	}
+	slices.SortFunc(incomeDistributions, func(a, b provider.DistributionResult) int {
+		return a.PaymentDate.Compare(b.PaymentDate)
+	})
+	ctx := apd.BaseContext.WithPrecision(14)
+	for _, d := range incomeDistributions {
+		// txn table use ID as PK because it could happen same fund + date + amount + txn_type happen more than once.
+		// with that we can't do insert ignore in this reinvested case,
+		// we need safeguard manually, skip if found reinvested txn for this fund at this date.
+		exist, err := fundRepo.isReinvestedTxnExists(fundRef.FundCode, d.PaymentDate)
+		if err != nil {
+			return fmt.Errorf("error check existing reinvested txn: %w", err)
+		}
+		if exist {
+			log.Printf("Found reinvested txn: %s, skip current income dist computation", d.PaymentDate)
+			continue
+		}
+		// change sen to RM, e.g. 50 sen to RM 0.5
+		ringgitPerUnit := new(apd.Decimal)
+		_, err = ctx.Quo(ringgitPerUnit, d.SenPerUnit, apd.New(100, 0))
+		if err != nil {
+			return fmt.Errorf("error when calculating ringgit per unit: %w", err)
+		}
+		totalUnit, err := fundRepo.getTotalUnitToDate(fundRef.FundCode, d.DeclareDate)
+		if err != nil {
+			return fmt.Errorf("error when calculating total unit to date: %w", err)
+		}
+		dividendPayout := new(apd.Decimal)
+		_, err = ctx.Mul(dividendPayout, ringgitPerUnit, totalUnit)
+		if err != nil {
+			return fmt.Errorf("error when calculating dividend payout: %w", err)
+		}
+		// during payment date, IUTA use the income dist to re-invest
+		// there is a catch/iuta found during 2025 AHAM PRS record, where it use Declare Date + 2 NAV to compute dist.
+		navResult, err := scraper.FetchNavByDate(fundRef, d.PaymentDate)
+		if err != nil {
+			return fmt.Errorf("error when fetch nav by date %s: %w", d.PaymentDate, err)
+		}
+		log.Printf("Income Dist: %v\n", navResult)
+		reinvestedUnit := new(apd.Decimal)
+		_, err = ctx.Quo(reinvestedUnit, dividendPayout, navResult.Nav)
+		if err != nil {
+			return fmt.Errorf("error when calculating reinvested unit payout: %w", err)
+		}
+
+		reinvestedTxn := Txn{
+			ID:                  uuid.NewString(),
+			FundCode:            fundRef.FundCode,
+			TxnDate:             d.PaymentDate,
+			Unit:                *reinvestedUnit,
+			UnitPrice:           *navResult.Nav,
+			SalesCharge:         *apd.New(0, 0),
+			NetInvestmentAmount: *dividendPayout,
+			TotalAmount:         *apd.New(0, 0),
+			TxnType:             "REINVESTED",
+			Remark:              "REINVESTED",
+		}
+
+		err = fundRepo.insertFundTxn(reinvestedTxn)
+		if err != nil {
+			return fmt.Errorf("error when inserting reinvested txn: %w", err)
+		}
+	}
+	return nil
+}
+
+// todo add test
+func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Time, error) {
+	// try to see which was the last pulled reinvested txn
+	// then try to pull around there, because not all provider provide declare date & payment date info
+	// a slight overlap make sure no data miss out.
 	latestReinvestedTxn, err := fundRepo.getLatestReinvestmentTxn(fundCode)
 	if err == nil {
-		return latestReinvestedTxn.TxnDate.Add(-time.Hour * 24), true
+		return latestReinvestedTxn.TxnDate.Add(time.Hour * -24), nil
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
-		log.Printf("Error fetching latest reinvestment txn of %s: %s\n", fundCode, err.Error())
-		return time.Time{}, false
+		return time.Time{}, fmt.Errorf("error when get latest reinvestment txn: %w", err)
 	}
 	// No Reinvested txn happened, get oldest txn date
 	oldestTxn, err := fundRepo.getOldestFundTxn(fundCode)
-	if err == nil {
-		// Transaction take T+2 to credit to holding
-		return oldestTxn.TxnDate.Add(-time.Hour * 24 * 3), true
+	if errors.Is(err, sql.ErrNoRows) {
+		return time.Time{}, errNoTxn
 	}
-	// Error or no rows, mean no subsequence pull required, always return ok = false
-	if !errors.Is(err, sql.ErrNoRows) {
-		log.Printf("Error fetching oldest fund txn of %s: %s\n", fundCode, err.Error())
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error when get oldest fund txn: %w", err)
 	}
-	return time.Time{}, false
+	// Transaction take T+2 to credit to holding
+	return oldestTxn.TxnDate.Add(-time.Hour * 24 * 3), nil
 }
