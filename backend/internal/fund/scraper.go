@@ -158,15 +158,15 @@ func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Tim
 	// try to see which was the last pulled reinvested txn
 	// then try to pull around there, because not all provider provide declare date & payment date info
 	// a slight overlap make sure no data miss out.
-	latestReinvestedTxn, err := fundRepo.getLatestReinvestmentTxn(fundCode)
+	latestReinvestedTxnDate, err := fundRepo.getLatestReinvestedTxnDate(fundCode)
 	if err == nil {
-		return latestReinvestedTxn.TxnDate.Add(time.Hour * -24), nil
+		return latestReinvestedTxnDate.Add(time.Hour * -24), nil
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
 		return time.Time{}, fmt.Errorf("error when get latest reinvestment txn: %w", err)
 	}
 	// No Reinvested txn happened, get oldest txn date
-	oldestTxn, err := fundRepo.getOldestFundTxn(fundCode)
+	oldestTxn, err := fundRepo.getOldestTxnDate(fundCode)
 	if errors.Is(err, sql.ErrNoRows) {
 		return time.Time{}, errNoTxn
 	}
@@ -174,5 +174,5 @@ func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Tim
 		return time.Time{}, fmt.Errorf("error when get oldest fund txn: %w", err)
 	}
 	// Transaction take T+2 to credit to holding
-	return oldestTxn.TxnDate.Add(-time.Hour * 24 * 3), nil
+	return oldestTxn.Add(-time.Hour * 24 * 3), nil
 }

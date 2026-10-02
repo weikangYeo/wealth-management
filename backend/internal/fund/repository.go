@@ -135,38 +135,34 @@ func (repo *repository) insertIgnoreFundPriceHistory(priceHistory PriceHistory) 
 	return tx.Commit()
 }
 
-func (repo *repository) getOldestFundTxn(fundCode string) (Txn, error) {
+func (repo *repository) getOldestTxnDate(fundCode string) (time.Time, error) {
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return Txn{}, err
+		return time.Time{}, err
 	}
 	defer tx.Rollback()
-	var fundTxn Txn
-	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, net_investment_amount, total_amount, txn_type, remark FROM fund_txn WHERE fund_code=? ORDER BY txn_date ASC LIMIT 1",
-		fundCode).Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
-		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.NetInvestmentAmount,
-		&fundTxn.TotalAmount, &fundTxn.TxnType, &fundTxn.Remark)
+	var txnDate time.Time
+	err = tx.QueryRow("SELECT txn_date FROM fund_txn WHERE fund_code=? ORDER BY txn_date ASC LIMIT 1",
+		fundCode).Scan(txnDate)
 	if err != nil {
-		return Txn{}, err
+		return time.Time{}, err
 	}
-	return fundTxn, nil
+	return txnDate, nil
 }
 
-func (repo *repository) getLatestReinvestmentTxn(fundCode string) (Txn, error) {
+func (repo *repository) getLatestReinvestedTxnDate(fundCode string) (time.Time, error) {
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return Txn{}, err
+		return time.Time{}, err
 	}
 	defer tx.Rollback()
-	var fundTxn Txn
-	err = tx.QueryRow("SELECT id, fund_code, txn_date, unit, unit_price, sales_charge, net_investment_amount, total_amount, txn_type, remark FROM fund_txn WHERE fund_code=? AND txn_type =? ORDER BY txn_date DESC LIMIT 1",
-		fundCode, "REINVESTED").Scan(&fundTxn.ID, &fundTxn.FundCode, &fundTxn.TxnDate,
-		&fundTxn.Unit, &fundTxn.UnitPrice, &fundTxn.SalesCharge, &fundTxn.NetInvestmentAmount,
-		&fundTxn.TotalAmount, &fundTxn.TxnType, &fundTxn.Remark)
+	var txnDate time.Time
+	err = tx.QueryRow("SELECT txn_date FROM fund_txn WHERE fund_code=? AND txn_type =? ORDER BY txn_date DESC LIMIT 1",
+		fundCode, "REINVESTED").Scan(&txnDate)
 	if err != nil {
-		return Txn{}, err
+		return time.Time{}, err
 	}
-	return fundTxn, nil
+	return txnDate, nil
 }
 
 func (repo *repository) getTotalUnitToDate(fundCode string, txnDate time.Time) (*apd.Decimal, error) {
