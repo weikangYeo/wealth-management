@@ -13,6 +13,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// Go satisfy interface impl implicitly, fund.repository already satisfy it, no code changed on repository side.
+type pullIncomeDistStartDateRepo interface {
+	getLatestReinvestedTxnDate(fundCode string) (time.Time, error)
+	getOldestTxnDate(fundCode string) (time.Time, error)
+}
+
 var errNoTxn = errors.New("no transaction found")
 
 // ScrapeFundNavAndIncomeDist pull nav and income dist, and compute REINVESTED transaction.
@@ -153,12 +159,11 @@ func scrapeIncomeDist(fundRepo *repository, scraper provider.FundDataProvider, f
 	return nil
 }
 
-// todo add test
-func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Time, error) {
+func getIncomeDistPullStartDate(repo pullIncomeDistStartDateRepo, fundCode string) (time.Time, error) {
 	// try to see which was the last pulled reinvested txn
 	// then try to pull around there, because not all provider provide declare date & payment date info
 	// a slight overlap make sure no data miss out.
-	latestReinvestedTxnDate, err := fundRepo.getLatestReinvestedTxnDate(fundCode)
+	latestReinvestedTxnDate, err := repo.getLatestReinvestedTxnDate(fundCode)
 	if err == nil {
 		return latestReinvestedTxnDate.Add(time.Hour * -24), nil
 	}
@@ -166,13 +171,14 @@ func getIncomeDistPullStartDate(fundRepo *repository, fundCode string) (time.Tim
 		return time.Time{}, fmt.Errorf("error when get latest reinvestment txn: %w", err)
 	}
 	// No Reinvested txn happened, get oldest txn date
-	oldestTxn, err := fundRepo.getOldestTxnDate(fundCode)
+	oldestTxn, err := repo.getOldestTxnDate(fundCode)
 	if errors.Is(err, sql.ErrNoRows) {
 		return time.Time{}, errNoTxn
 	}
 	if err != nil {
 		return time.Time{}, fmt.Errorf("error when get oldest fund txn: %w", err)
 	}
-	// Transaction take T+2 to credit to holding
-	return oldestTxn.Add(-time.Hour * 24 * 3), nil
+	// Even there is diff `buy processing time` per fund, income dist is base on entitlement date.
+	// usually entitlement = txn date
+	return oldestTxn, nil
 }
