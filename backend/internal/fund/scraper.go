@@ -19,6 +19,15 @@ type pullIncomeDistStartDateRepo interface {
 	getOldestTxnDate(fundCode string) (time.Time, error)
 }
 
+// testable interface
+type incomeDistributionRepo interface {
+	// extend interface
+	pullIncomeDistStartDateRepo
+	isReinvestedTxnExists(fundCode string, txnDate time.Time) (bool, error)
+	getTotalUnitToDate(fundCode string, txnDate time.Time) (*apd.Decimal, error)
+	insertFundTxn(fundTxn Txn) error
+}
+
 var errNoTxn = errors.New("no transaction found")
 
 // ScrapeFundNavAndIncomeDist pull nav and income dist, and compute REINVESTED transaction.
@@ -79,7 +88,7 @@ func scrapeNav(fundRepo *repository, scraper provider.FundDataProvider, fundRef 
 }
 
 // todo add test
-func scrapeIncomeDist(fundRepo *repository, scraper provider.FundDataProvider, fundRef provider.FundRef) error {
+func scrapeIncomeDist(fundRepo incomeDistributionRepo, scraper provider.FundDataProvider, fundRef provider.FundRef) error {
 	// Get Income Distribution from last pulled data up till today
 	startDate, err := getIncomeDistPullStartDate(fundRepo, fundRef.FundCode)
 	if errors.Is(err, errNoTxn) {
