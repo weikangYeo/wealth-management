@@ -15,6 +15,7 @@ type DistributionResult struct {
 	DeclareDate time.Time
 	PaymentDate time.Time
 	SenPerUnit  *apd.Decimal
+	Remark      string
 }
 
 // FundRef is what a provider needs to locate a fund at its data source. Not every

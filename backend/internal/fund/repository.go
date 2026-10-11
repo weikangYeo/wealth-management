@@ -91,8 +91,8 @@ func (repo *repository) getFundTxnByFundCode(fundCode string) ([]Txn, error) {
 
 func (repo *repository) isReinvestedTxnExists(fundCode string, txnDate time.Time) (bool, error) {
 	var exists bool
-	err := repo.db.QueryRow(`select EXISTS(select 1 from fund_info where fund_code=? and txn_date=? and txn_type='REINVESTED')`,
-		fundCode, txnDate).Scan(exists)
+	err := repo.db.QueryRow(`select EXISTS(select 1 from fund_txn where fund_code=? and txn_date=? and txn_type='REINVESTED')`,
+		fundCode, txnDate).Scan(&exists)
 	return exists, err
 }
 
@@ -143,7 +143,7 @@ func (repo *repository) getOldestTxnDate(fundCode string) (time.Time, error) {
 	defer tx.Rollback()
 	var txnDate time.Time
 	err = tx.QueryRow("SELECT txn_date FROM fund_txn WHERE fund_code=? ORDER BY txn_date ASC LIMIT 1",
-		fundCode).Scan(txnDate)
+		fundCode).Scan(&txnDate)
 	if err != nil {
 		return time.Time{}, err
 	}

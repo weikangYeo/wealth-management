@@ -1,0 +1,1 @@
+ALTER TABLE fund_txn MODIFY remark VARCHAR(200) NULL;

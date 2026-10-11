@@ -87,7 +87,6 @@ func scrapeNav(fundRepo *repository, scraper provider.FundDataProvider, fundRef 
 	return nil
 }
 
-// todo add test
 func scrapeIncomeDist(fundRepo incomeDistributionRepo, scraper provider.FundDataProvider, fundRef provider.FundRef) error {
 	// Get Income Distribution from last pulled data up till today
 	startDate, err := getIncomeDistPullStartDate(fundRepo, fundRef.FundCode)
@@ -157,9 +156,9 @@ func scrapeIncomeDist(fundRepo incomeDistributionRepo, scraper provider.FundData
 			NetInvestmentAmount: *dividendPayout,
 			TotalAmount:         *apd.New(0, 0),
 			TxnType:             "REINVESTED",
-			Remark:              "REINVESTED",
+			Remark:              d.Remark,
 		}
-
+		log.Printf("Insert REINVESTED txn of %s\n", fundRef.Name)
 		err = fundRepo.insertFundTxn(reinvestedTxn)
 		if err != nil {
 			return fmt.Errorf("error when inserting reinvested txn: %w", err)

@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	"wealth-management/internal/platform/decimal"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/cockroachdb/apd/v3"
@@ -48,38 +49,92 @@ func TestParseIncomeDistFromHtml(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := parseIncomeDistFromHtml(doc)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wantDate := func(y int, m time.Month, d int) time.Time {
+	toDate := func(y int, m time.Month, d int) time.Time {
 		return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 	}
-	want := []struct {
-		date  time.Time
-		gross string
+	toDecimal := func(decimalStr string) *apd.Decimal {
+		d, err := decimal.ToDecimal(decimalStr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return d
+	}
+	tests := []struct {
+		name     string
+		fromDate time.Time
+		want     []DistributionResult
 	}{
-		{wantDate(2022, time.August, 31), "1.86"},
-		{wantDate(2021, time.October, 31), "2.98"},
-		{wantDate(2020, time.December, 31), "3.84"},
+		{
+			name:     "Pull all income dist from source",
+			fromDate: toDate(2000, time.January, 1),
+			want: []DistributionResult{
+				{
+					PaymentDate: toDate(2022, time.August, 31),
+					DeclareDate: toDate(2022, time.August, 31),
+					SenPerUnit:  toDecimal("1.86"),
+				},
+				{
+					PaymentDate: toDate(2021, time.October, 31),
+					DeclareDate: toDate(2021, time.October, 31),
+					SenPerUnit:  toDecimal("2.98"),
+				}, {
+					PaymentDate: toDate(2020, time.December, 31),
+					DeclareDate: toDate(2020, time.December, 31),
+					SenPerUnit:  toDecimal("3.84"),
+				},
+			},
+		},
+		{
+			name:     "Pull only matched income dist",
+			fromDate: toDate(2022, time.January, 1),
+			want: []DistributionResult{
+				{
+					PaymentDate: toDate(2022, time.August, 31),
+					DeclareDate: toDate(2022, time.August, 31),
+					SenPerUnit:  toDecimal("1.86"),
+				},
+			},
+		},
+		{
+			name:     "fromDate is not inclusive",
+			fromDate: toDate(2021, time.October, 31),
+			want: []DistributionResult{
+				{
+					PaymentDate: toDate(2022, time.August, 31),
+					DeclareDate: toDate(2022, time.August, 31),
+					SenPerUnit:  toDecimal("1.86"),
+				},
+			},
+		},
+		{
+			name:     "no result case",
+			fromDate: toDate(2028, time.October, 31),
+			want:     []DistributionResult{},
+		},
 	}
 
-	if len(result) != len(want) {
-		t.Fatalf("got %d distributions, want %d: %+v", len(result), len(want), result)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := parseIncomeDistFromHtml(doc, tt.fromDate)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(result) != len(tt.want) {
+				t.Fatalf("got %d distributions, want %d: %+v", len(result), len(tt.want), result)
+			}
+			for i, w := range tt.want {
+				got := result[i]
+				if !got.DeclareDate.Equal(w.DeclareDate) {
+					t.Errorf("result[%d].DeclareDate = %v, want %v", i, got.DeclareDate, w.DeclareDate)
+				}
+				if !got.PaymentDate.Equal(w.PaymentDate) {
+					t.Errorf("result[%d].PaymentDate = %v, want %v", i, got.PaymentDate, w.PaymentDate)
+				}
+				if got.SenPerUnit.Cmp(w.SenPerUnit) != 0 {
+					t.Errorf("result[%d].SenPerUnit = %v, want %v", i, got.SenPerUnit, w.SenPerUnit)
+				}
+			}
+		})
 
-	for i, w := range want {
-		got := result[i]
-		if !got.DeclareDate.Equal(w.date) {
-			t.Errorf("result[%d].DeclareDate = %v, want %v", i, got.DeclareDate, w.date)
-		}
-		if !got.PaymentDate.Equal(w.date) {
-			t.Errorf("result[%d].PaymentDate = %v, want %v", i, got.PaymentDate, w.date)
-		}
-		wantGross, _, _ := apd.NewFromString(w.gross)
-		if got.SenPerUnit.Cmp(wantGross) != 0 {
-			t.Errorf("result[%d].SenPerUnit = %v, want %v", i, got.SenPerUnit, wantGross)
-		}
 	}
 }
