@@ -19,12 +19,15 @@ import (
 
 type TaFundProvider struct{}
 
+type taNavLookup interface {
+	FetchNavByDate(fund FundRef, date time.Time) (*NavResult, error)
+}
+
 const navBaseUrl = "https://aims.tainvest.com.my/mod/openFPrice/openFPrice_act_list_new.cfm"
 const fundInfoBaseUrl = "https://www.tainvest.com.my"
-const tempPdfFileName = "ta_factsheet.pdf"
 const tempTextFileName = "ta_factsheet.txt"
 
-func (p TaFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult, error) {
+func (p *TaFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult, error) {
 	u, err := url.Parse(navBaseUrl)
 	if err != nil {
 		return nil, err
@@ -35,6 +38,7 @@ func (p TaFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult
 	query.Set("tab", "1")
 	query.Set("data", "01")
 	u.RawQuery = query.Encode()
+	log.Printf("Fetching Nav By Date, calling: %s", u.String())
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, err
@@ -50,7 +54,7 @@ func (p TaFundProvider) FetchNavByDate(fund FundRef, date time.Time) (*NavResult
 // FetchIncomeDistribution TA income dist logic would be tricky, it require 2 steps.
 // First go to Fund Info Page and scraped "Fund Fact Sheet" anchor link, then download the pdf
 // Next use pdfToText to convert pdf to text file, read it (use best guess) and get income dist
-func (p TaFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time) ([]DistributionResult, error) {
+func (p *TaFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time) ([]DistributionResult, error) {
 	// Get Fact Sheet PDF url from fund info html page
 	u, err := url.Parse(fundInfoBaseUrl + "/" + fund.ScrapeParamValue + "/")
 	if err != nil {
@@ -76,20 +80,22 @@ func (p TaFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time
 	if err != nil {
 		return nil, err
 	}
-	out, err := os.Create(tempPdfFileName)
-	defer func() {
-		err := os.Remove(tempPdfFileName)
-		if err != nil {
-			log.Printf("Error removing temp pdf file %s", tempPdfFileName)
-		}
-	}()
+	out, err := os.CreateTemp("", "ta-factsheet-*.pdf")
 	if err != nil {
 		return nil, err
 	}
+	// defer is register in last-in-first-out order,
+	// we close file then only remove
+	defer func() {
+		err := os.Remove(out.Name())
+		if err != nil {
+			log.Printf("Error removing temp pdf file %s", out.Name())
+		}
+	}()
 	defer func(out *os.File) {
 		err := out.Close()
 		if err != nil {
-			log.Printf("Error closing temp pdf file %s", tempPdfFileName)
+			log.Printf("Error closing temp pdf file %s", out.Name())
 		}
 	}(out)
 	pdfResp, err := http.Get(pdfUrlParsed.String())
@@ -108,7 +114,7 @@ func (p TaFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time
 	// use os installed pdfToTxt library.
 	// have tried https://github.com/ledongthuc/pdf but it has little to no geometry-aware reconstruction
 	// i.e. the output is difficult to parse, too much effort to tinker it.
-	pdfToTextCmd := exec.Command("pdftotext", "-layout", tempPdfFileName, tempTextFileName)
+	pdfToTextCmd := exec.Command("pdftotext", "-layout", out.Name(), tempTextFileName)
 	defer func() {
 		err := os.Remove(tempTextFileName)
 		if err != nil {
@@ -127,10 +133,48 @@ func (p TaFundProvider) FetchIncomeDistribution(fund FundRef, fromDate time.Time
 		return nil, err
 	}
 	defer file.Close()
-	return p.parseIncomeDistFromTextFile(file)
+	textParsedIncomeDists, err := p.parseIncomeDistFromTextFile(file)
+	if err != nil {
+		return nil, err
+	}
+	return getValidIncomeDist(fund, fromDate, time.Now(), textParsedIncomeDists, p)
 }
 
-func (p TaFundProvider) parseFactSheetPdfUrlFromHtml(doc *goquery.Document, scrapeParamValue string) (string, error) {
+// todo test this part
+func getValidIncomeDist(fund FundRef, eligibleStartDate time.Time, navDueDate time.Time, fullIncomeDist []DistributionResult, navLookup taNavLookup) ([]DistributionResult, error) {
+	results := make([]DistributionResult, 0)
+	for _, d := range fullIncomeDist {
+		if d.PaymentDate.After(eligibleStartDate) {
+			// for TA, the date shown in source is just declaration/entitlement date
+			// we need to find payment ourselves by finding the next NAV (updated) date.
+			foundNav := false
+			for nextDate := d.DeclareDate.Add(24 * time.Hour); !nextDate.After(navDueDate); nextDate = nextDate.Add(24 * time.Hour) {
+				// In TA datasource, when nav & navDate updated,
+				// it is the date it issued payment
+				navResult, err := navLookup.FetchNavByDate(fund, nextDate)
+				if err != nil {
+					return nil, err
+				}
+				if navResult.NavDate.After(d.DeclareDate) {
+					// txn date might not align with FSM,
+					// but NAV is aligned so far.
+					d.PaymentDate = navResult.NavDate
+					foundNav = true
+					break
+				}
+			}
+			if foundNav {
+				// if income dist is declared but nav is not yet reflected,
+				// dont compute reinvest at the moment as we dont have the accurate nav to do calculation
+				// we can get it on next few day run
+				results = append(results, d)
+			}
+		}
+	}
+	return results, nil
+}
+
+func (p *TaFundProvider) parseFactSheetPdfUrlFromHtml(doc *goquery.Document, scrapeParamValue string) (string, error) {
 	var factSheetPdf string
 	doc.Find("a").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		href, ok := s.Attr("href")
@@ -156,18 +200,19 @@ func (p TaFundProvider) parseFactSheetPdfUrlFromHtml(doc *goquery.Document, scra
 
 // make it as function receiver, so it will be private to TaFundProvider,
 // else it would be package visible
-func (p TaFundProvider) parseNavFromHtml(doc *goquery.Document, fundName string) (*NavResult, error) {
+func (p *TaFundProvider) parseNavFromHtml(doc *goquery.Document, fundName string) (*NavResult, error) {
 	var result NavResult
 	var parseErr error
 	doc.Find("td").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		scrapedFundName := strings.ToUpper(strings.TrimSpace(s.Text()))
-		if scrapedFundName == strings.ToUpper(fundName) {
-			navDate, err := time.Parse("02/01/2006", s.Next().Text())
+		if scrapedFundName == strings.ToUpper(strings.TrimSpace(fundName)) {
+			log.Printf("Found fund %s\n", scrapedFundName)
+			navDate, err := time.Parse("02/01/2006", strings.TrimSpace(s.Next().Text()))
 			if err != nil {
 				parseErr = err
 				return false
 			}
-			nav, err := decimal.ToDecimal(s.Next().Next().Text())
+			nav, err := decimal.ToDecimal(strings.TrimSpace(s.Next().Next().Text()))
 			if err != nil {
 				parseErr = err
 				return false
@@ -176,6 +221,7 @@ func (p TaFundProvider) parseNavFromHtml(doc *goquery.Document, fundName string)
 				Nav:     nav,
 				NavDate: navDate,
 			}
+			return false
 		}
 		return true
 	})
@@ -188,7 +234,7 @@ func (p TaFundProvider) parseNavFromHtml(doc *goquery.Document, fundName string)
 	return &result, parseErr
 }
 
-func (p TaFundProvider) parseIncomeDistFromTextFile(r io.Reader) ([]DistributionResult, error) {
+func (p *TaFundProvider) parseIncomeDistFromTextFile(r io.Reader) ([]DistributionResult, error) {
 	isIncomeDistTable := false
 	hasIncomeDistRead := false
 	myrCol := 0
