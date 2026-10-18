@@ -70,7 +70,8 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
                 - [X] Aham (Affin Hwang)
                 - [X] Principal
                 - [X] TA
-                - [X] Maybank
+                - [ ] Maybank (Impl done, yet to test)
+                - [ ] Vanguard
         - [ ] Clean and Recompute all income distribution job (because one error would cause cumulative cal error later)
         - [ ] Aggregated result
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
@@ -123,14 +124,10 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 ## Note for future self
 
 ### Next todo
-
-- Performance enhancement, no-opt if duplicated run on the same day.
 - fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
     - test with real data with full run
-        - TA
         - Maybank
-        - Offset RHB
-- Import Stock, golds, Funds info from desktop
+    -  Vanguard S&P 500 UCITS ETF
 - Setup stock aggregate info, in /overviews API and get stock details API
 - Portfolio Overview
 - MCP, to interact with Claude

@@ -3,6 +3,7 @@ import {Component, computed, inject, signal} from '@angular/core';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {Fund, FundTxn, FundTxnType} from './fund.model';
 import {FundService} from './fund.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-fund-detail',
@@ -13,6 +14,7 @@ import {FundService} from './fund.service';
 export class FundDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly fundService = inject(FundService);
+  private snackBar = inject(MatSnackBar);
 
   protected fund = signal<Fund>({fundCode: '', name: '', fsmUrl: ''});
   protected transactions = signal<FundTxn[]>([]);
@@ -53,7 +55,7 @@ export class FundDetail {
     });
   }
 
-  private loadFundInfo(fundCode:string){
+  private loadFundInfo(fundCode: string) {
     this.fundService.getFundOverviewByFundCode(fundCode).subscribe({
       next: data => {
         this.fund.set(data)
@@ -68,7 +70,7 @@ export class FundDetail {
         next: data => {
           this.transactions.set(data.content ?? [])
         },
-        error : err => console.log(err)
+        error: err => console.log(err)
       }
     );
   }
@@ -98,7 +100,9 @@ export class FundDetail {
     salesCharge: string,
     remark: string
   ) {
+    console.log("clicked")
     if (!txnDate || !unit || !unitPrice) {
+      console.log("field not entered")
       return;
     }
 
@@ -122,8 +126,17 @@ export class FundDetail {
       totalAmount: totalAmount,
       remark: remark?.trim() || '',
     };
-
-    // todo: wire up service
-    this.transactions.update(list => [...list, newTxn]);
+    this.fundService.addFundTxn(newTxn.fundCode, newTxn).subscribe({
+      next: () => {
+        this.snackBar.open('Create Fund Txn Successful', 'OK', {
+          duration: 3000,
+          verticalPosition: 'top'
+        });
+        this.loadFundTxns(this.fund().fundCode.toString());
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    })
   }
 }
