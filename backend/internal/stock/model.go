@@ -2,6 +2,7 @@ package stock
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/cockroachdb/apd/v3"
@@ -14,15 +15,16 @@ type Stock struct {
 }
 
 type Txn struct {
-	ID         string      `json:"id"`
-	StockName  string      `json:"stockName"`
-	TxnDate    time.Time   `json:"txnDate"`
-	Unit       apd.Decimal `json:"unit"`
-	UnitPrice  apd.Decimal `json:"unitPrice"`
-	BrokerFee  apd.Decimal `json:"brokerFee"`
-	TotalPrice apd.Decimal `json:"totalPrice"`
-	TxnType    string      `json:"txnType"`
-	Remark     string      `json:"remark"`
+	ID        string      `json:"id"`
+	StockName string      `json:"stockName"`
+	TxnDate   time.Time   `json:"txnDate"`
+	Unit      apd.Decimal `json:"unit"`
+	UnitPrice apd.Decimal `json:"unitPrice"`
+	BrokerFee apd.Decimal `json:"brokerFee"`
+	// totalAmount is cash that moved = (unitPrice * unit) + brokerFee in buy or (unitPrice * unit) - brokerFee
+	TotalAmount apd.Decimal `json:"totalAmount"`
+	TxnType     string      `json:"txnType"`
+	Remark      string      `json:"remark"`
 }
 
 type TxnRequest struct {
@@ -61,17 +63,21 @@ type Price struct {
 	LastDonePrice apd.Decimal
 }
 
-type StockOverview struct {
-	StockName         string             `json:"stockName"`
-	DisplayName       string             `json:"displayName"`
-	BursaStockId      string             `json:"bursaStockId"`
-	DividendOverviews []DividendOverview `json:"dividendOverviews"`
+type Overview struct {
+	StockName     string      `json:"stockName"`
+	DisplayName   string      `json:"displayName"`
+	BursaStockId  string      `json:"bursaStockId"`
+	TotalDividend apd.Decimal `json:"totalDividend"`
+	AveragePrice  apd.Decimal `json:"averagePrice"` // average price per stock unit (fee inclusive)
+	TotalUnit     apd.Decimal `json:"totalUnit"`
+	RealizedGain  apd.Decimal `json:"realizedGain"`
 }
 
-type DividendOverview struct {
-	Year          string      `json:"year"`
-	TotalDividend apd.Decimal `json:"totalDividend"`
-	DividendYield apd.Decimal `json:"dividendYield"`
+// Position mean `holding` at a given/specific time in stock trading domain
+type Position struct {
+	unit         apd.Decimal
+	cost         apd.Decimal // how much cost I spent to hold this much of `unit` so far
+	realizedGain apd.Decimal
 }
 
 // UnmarshalJSON Custom JSON unmarshaling for date parsing,
@@ -119,17 +125,17 @@ func (t *TxnRequest) UnmarshalJSON(data []byte) error {
 func (t *Txn) MarshalJSON() ([]byte, error) {
 	type Alias Txn
 	return json.Marshal(&struct {
-		Unit       json.Number `json:"unit"`
-		UnitPrice  json.Number `json:"unitPrice"`
-		BrokerFee  json.Number `json:"brokerFee"`
-		TotalPrice json.Number `json:"totalPrice"`
+		Unit        json.Number `json:"unit"`
+		UnitPrice   json.Number `json:"unitPrice"`
+		BrokerFee   json.Number `json:"brokerFee"`
+		TotalAmount json.Number `json:"totalAmount"`
 		*Alias
 	}{
-		Unit:       json.Number(t.Unit.String()),
-		UnitPrice:  json.Number(t.UnitPrice.String()),
-		BrokerFee:  json.Number(t.BrokerFee.String()),
-		TotalPrice: json.Number(t.TotalPrice.String()),
-		Alias:      (*Alias)(t),
+		Unit:        json.Number(t.Unit.String()),
+		UnitPrice:   json.Number(t.UnitPrice.String()),
+		BrokerFee:   json.Number(t.BrokerFee.String()),
+		TotalAmount: json.Number(t.TotalAmount.String()),
+		Alias:       (*Alias)(t),
 	})
 }
 
@@ -192,21 +198,31 @@ func (dividend *Dividend) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// CalculateStockTxnTotalPrice computes totalPrice = (unitPrice * unit) + brokerFee
-func (t *Txn) CalculateStockTxnTotalPrice(ctx *apd.Context) error {
-	totalPrice := new(apd.Decimal)
-
+// todo add test
+// CalculateStockTxnTotalAmount computes totalAmount = (unitPrice * unit) +/- brokerFee base on txn type
+func (t *Txn) CalculateStockTxnTotalAmount() error {
+	ctx := apd.BaseContext.WithPrecision(14)
+	totalAmount := new(apd.Decimal)
 	// Multiply unitPrice * unit
-	if _, err := ctx.Mul(totalPrice, &t.UnitPrice, &t.Unit); err != nil {
+	if _, err := ctx.Mul(totalAmount, &t.UnitPrice, &t.Unit); err != nil {
 		return err
 	}
 
-	// Add brokerFee
-	if _, err := ctx.Add(totalPrice, totalPrice, &t.BrokerFee); err != nil {
-		return err
+	switch t.TxnType {
+	case "BUY":
+		// indicate cost of buying, cost of stock units + broker fee
+		if _, err := ctx.Add(totalAmount, totalAmount, &t.BrokerFee); err != nil {
+			return err
+		}
+	case "SELL":
+		// indicate return of a transaction, return of sold stock unit - broker fee
+		if _, err := ctx.Sub(totalAmount, totalAmount, &t.BrokerFee); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported txn type to calculate total_amount")
 	}
-
-	t.TotalPrice = *totalPrice
+	t.TotalAmount = *totalAmount
 	return nil
 }
 

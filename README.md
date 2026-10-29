@@ -80,10 +80,15 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
         - [ ] Portfolio overview, group by sector (30 % bank, 20 % Tech etc)
         - [ ] Aggregated all stock info
             - [x] total dividends
-            - [ ] DY
-            - [ ] unreliazed return
-            - [ ] reliazed return
-            - [ ] anuallized return
+            - [ ] DY (on market)
+            - [ ] Dividend Yield on Cost
+            - [ ] Dividend Return (cumulative dividends / cost basis)
+            - [ ] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
+            - [ ] avg price
+            - [ ] total unit
+            - [ ] unrealized return
+            - [ ] realized return
+            - [ ] Annualized return
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
         - [x] Scrape Stock Price
             - [x] Scrape Stock Price from bursa
@@ -115,7 +120,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] Run script to start everything via a script
     - [ ] register it as win/mac service so it auto start when pc boot
     - [ ] MCP support, allow AI to manipulate data for me, such as run
-    - [ ] Performance enhancement, read table for aggregated data?
+    - [ ] Performance enhancement, read table for aggregated data (Yes please, do at scraper logic)
     - [ ] Performance enhancement, no-opt if duplicated run on the same day.
     - [ ] Vault/KV server to before host (probably package it and deploy as side-car container)
     - [ ] scrape url moving from .env back to static value in go file, since we are building logic base on a specific
@@ -124,11 +129,23 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 ## Note for future self
 
 ### Next todo
-- fund, scrapper - use Strategy design pattern (refer fund-nav-info-scrape)
-    - test with real data with full run
-        - Maybank
-    -  Vanguard S&P 500 UCITS ETF
-- Setup stock aggregate info, in /overviews API and get stock details API
+
+- Make totalPrice consistent across modules (gold, stock, fund), also fix stock's SELL txn totalPrice
+- Setup stock aggregate info, in /overviews API and get stock details API, and FE show it
+    - [x] avg price
+    - [x] total unit
+    - [ ] DY (on market)
+    - [ ] Dividend Yield on Cost
+    - [ ] Dividend Return (cumulative dividends / cost basis)
+    - [ ] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
+    - [ ] unrealized return
+    - [x] realized return
+    - [ ] Annualized return
+    - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
+    - [ ] unit test those value
+    - [ ] show in FE
+
 - Portfolio Overview
 - MCP, to interact with Claude
     - Might need to do overall profolio APIs first
+- [ ] Performance enhancement, read table for aggregated data (Yes please, do at scraper logic)

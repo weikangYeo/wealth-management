@@ -38,7 +38,7 @@ export class StockDetail {
   protected dividends = signal<Dividend[]>([]);
   protected totalTxnValue = computed(() =>
     this.transactions().reduce(
-      (sum, txn) => sum + (txn.totalPrice || 0), 0)
+      (sum, txn) => sum + (txn.totalAmount || 0), 0)
   );
   // todo shall i move to another component?
   // dividend tab inputs

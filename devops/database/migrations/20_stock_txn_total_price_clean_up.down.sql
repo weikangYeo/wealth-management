@@ -1,0 +1,1 @@
+ALTER TABLE stock_txn RENAME COLUMN total_amount TO total_price;

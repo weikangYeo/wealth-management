@@ -3,7 +3,6 @@ package stock
 import (
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/cockroachdb/apd/v3"
 	"github.com/gin-gonic/gin"
@@ -18,8 +17,6 @@ func newStockHandler(stockRepo *repository) *handler {
 	return &handler{stockRepo: stockRepo}
 }
 
-// do a basic stock info listing for now
-// todo enhance to show some aggregated info, probably we need to read from a pre-compute table for performance
 func (handler *handler) getAllStock(context *gin.Context) {
 	stocks, err := handler.stockRepo.getAllStocks()
 	if err != nil {
@@ -27,16 +24,52 @@ func (handler *handler) getAllStock(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.Printf("Retrieved %d stocks from database", len(stocks))
-	for i, stock := range stocks {
-		log.Printf("Stock %d: StockName='%s', DisplayName='%s'", i, stock.StockName, stock.DisplayName)
+	txns, err := handler.stockRepo.getAllTxn()
+	if err != nil {
+		log.Printf("Error getting all stock txn: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-	context.JSON(http.StatusOK, gin.H{"content": stocks})
+	divs, err := handler.stockRepo.getAllDividend()
+	if err != nil {
+		log.Printf("Error getting all dividends: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	txnByStockName := make(map[string][]Txn)
+	for _, t := range txns {
+		// append will "append" t to `txnByStockName[t.StockName]` collection, then assign (replace) to txnByStockName[t.StockName]
+		txnByStockName[t.StockName] = append(txnByStockName[t.StockName], t)
+	}
+	divByStockName := make(map[string][]Dividend)
+	for _, d := range divs {
+		divByStockName[d.StockName] = append(divByStockName[d.StockName], d)
+	}
+	// length 0 (no item), but capacity = size of stock to avoid resize in iteration
+	overviews := make([]Overview, 0, len(stocks))
+	for _, s := range stocks {
+		stockTxn := txnByStockName[s.StockName]
+		stockDiv := divByStockName[s.StockName]
+		overview, err := computeOverview(s, stockTxn, stockDiv)
+		if err != nil {
+			log.Printf("Error compute overview: %v", err)
+			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		overviews = append(overviews, overview)
+	}
+	context.JSON(http.StatusOK, gin.H{"content": overviews})
 }
 
-// todo enhance to include more aggregated details
-func (handler *handler) getStockOverview(context *gin.Context) {
-	stock, err := handler.stockRepo.getStockByStockName(context.Param("stockName"))
+func (handler *handler) getStock(context *gin.Context) {
+	stockName := context.Param("stockName")
+	stock, err := handler.stockRepo.getStockByStockName(stockName)
+	if err != nil {
+		log.Printf("Error getting stock: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	txns, err := handler.stockRepo.getStockTxnByStockName(stockName)
 	if err != nil {
 		log.Printf("Error getting stock: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -48,35 +81,11 @@ func (handler *handler) getStockOverview(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	totalByYear := make(map[int]*apd.Decimal)
-	decimalCtx := apd.BaseContext.WithPrecision(14)
-	// sum dividend per year
-	for _, div := range dividends {
-		year := div.ExDate.Year()
-		if _, isExists := totalByYear[year]; !isExists {
-			totalByYear[year] = apd.New(0, 0)
-		}
-		if _, err := decimalCtx.Add(totalByYear[year], totalByYear[year], &div.NetAmount); err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+	overview, err := computeOverview(stock, txns, dividends)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
-
-	var dividendOverviews []DividendOverview
-	for year, total := range totalByYear {
-		dividendOverviews = append(dividendOverviews, DividendOverview{
-			Year:          strconv.Itoa(year),
-			TotalDividend: *total,
-		})
-	}
-
-	overview := StockOverview{
-		StockName:         stock.StockName,
-		DisplayName:       stock.DisplayName,
-		BursaStockId:      stock.BursaStockId,
-		DividendOverviews: dividendOverviews,
-	}
-
 	context.JSON(http.StatusOK, overview)
 }
 
@@ -137,8 +146,7 @@ func (handler *handler) createStockTxn(context *gin.Context) {
 	}
 
 	// Calculate total price
-	decimalCtx := apd.BaseContext.WithPrecision(14)
-	if err := txn.CalculateStockTxnTotalPrice(decimalCtx); err != nil {
+	if err := txn.CalculateStockTxnTotalAmount(); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
 		return
 	}
@@ -171,8 +179,7 @@ func (handler *handler) updateStockTxn(context *gin.Context) {
 	}
 
 	// Calculate total price
-	decimalCtx := apd.BaseContext.WithPrecision(14)
-	if err := txn.CalculateStockTxnTotalPrice(decimalCtx); err != nil {
+	if err := txn.CalculateStockTxnTotalAmount(); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid calculation: " + err.Error()})
 		return
 	}

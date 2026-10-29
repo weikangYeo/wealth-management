@@ -63,6 +63,24 @@ func (r repository) createStock(stock Stock) error {
 	return tx.Commit()
 }
 
+func (r repository) getAllTxn() ([]Txn, error) {
+	rows, err := r.db.Query("SELECT * from stock_txn order by txn_date desc")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	txns := []Txn{}
+	for rows.Next() {
+		var txn Txn
+		if err := rows.Scan(&txn.ID, &txn.StockName, &txn.TxnDate, &txn.Unit, &txn.UnitPrice,
+			&txn.BrokerFee, &txn.TotalAmount, &txn.TxnType, &txn.Remark); err != nil {
+			return nil, err
+		}
+		txns = append(txns, txn)
+	}
+	return txns, nil
+}
+
 func (r repository) getStockTxnByStockName(stockName string) ([]Txn, error) {
 	rows, err := r.db.Query("SELECT * from stock_txn where stock_name = ? order by txn_date desc", stockName)
 	if err != nil {
@@ -73,7 +91,7 @@ func (r repository) getStockTxnByStockName(stockName string) ([]Txn, error) {
 	for rows.Next() {
 		var txn Txn
 		if err := rows.Scan(&txn.ID, &txn.StockName, &txn.TxnDate, &txn.Unit, &txn.UnitPrice,
-			&txn.BrokerFee, &txn.TotalPrice, &txn.TxnType, &txn.Remark); err != nil {
+			&txn.BrokerFee, &txn.TotalAmount, &txn.TxnType, &txn.Remark); err != nil {
 			return nil, err
 		}
 		txns = append(txns, txn)
@@ -87,12 +105,12 @@ func (r repository) createStockTxn(stockTxn Txn) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare("INSERT INTO stock_txn (id, stock_name, txn_date, unit, unit_price, broker_fee, total_price, txn_type, remark) values (?,?,?,?,?,?,?,?,?)")
+	stmt, err := tx.Prepare("INSERT INTO stock_txn (id, stock_name, txn_date, unit, unit_price, broker_fee, total_amount, txn_type, remark) values (?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(stockTxn.ID, stockTxn.StockName, stockTxn.TxnDate, stockTxn.Unit, stockTxn.UnitPrice, stockTxn.BrokerFee, stockTxn.TotalPrice, stockTxn.TxnType, stockTxn.Remark); err != nil {
+	if _, err := stmt.Exec(stockTxn.ID, stockTxn.StockName, stockTxn.TxnDate, stockTxn.Unit, stockTxn.UnitPrice, stockTxn.BrokerFee, stockTxn.TotalAmount, stockTxn.TxnType, stockTxn.Remark); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -104,15 +122,37 @@ func (r repository) updateStockTxn(stockTxn Txn) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare("UPDATE stock_txn SET txn_date=?, unit=?, unit_price=?, broker_fee=?, total_price=?, txn_type=?, remark=? WHERE id=? and stock_name =?")
+	stmt, err := tx.Prepare("UPDATE stock_txn SET txn_date=?, unit=?, unit_price=?, broker_fee=?, total_amount=?, txn_type=?, remark=? WHERE id=? and stock_name =?")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	if _, err := stmt.Exec(stockTxn.TxnDate, stockTxn.Unit, stockTxn.UnitPrice, stockTxn.BrokerFee, stockTxn.TotalPrice, stockTxn.TxnType, stockTxn.Remark, stockTxn.ID, stockTxn.StockName); err != nil {
+	if _, err := stmt.Exec(stockTxn.TxnDate, stockTxn.Unit, stockTxn.UnitPrice, stockTxn.BrokerFee, stockTxn.TotalAmount, stockTxn.TxnType, stockTxn.Remark, stockTxn.ID, stockTxn.StockName); err != nil {
 		return err
 	}
 	return tx.Commit()
+}
+
+func (r repository) getAllDividend() ([]Dividend, error) {
+	rows, err := r.db.Query("SELECT stock_name, ex_date, payment_date, stock_unit, dividend_per_unit, tax, gross_amount, net_amount, remark FROM stock_dividend order by ex_date desc")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	dividends := []Dividend{}
+	for rows.Next() {
+		var dividend Dividend
+		if err := rows.Scan(&dividend.StockName, &dividend.ExDate, &dividend.PaymentDate,
+			&dividend.StockUnit, &dividend.DividendPerUnit, &dividend.TaxPercentage,
+			&dividend.GrossAmount, &dividend.NetAmount, &dividend.Remark); err != nil {
+			return nil, err
+		}
+		dividends = append(dividends, dividend)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return dividends, nil
 }
 
 func (r repository) getDividendByStockName(stockName string) ([]Dividend, error) {

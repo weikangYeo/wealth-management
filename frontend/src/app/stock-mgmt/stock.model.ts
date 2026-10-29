@@ -25,7 +25,7 @@ export interface StockTxn {
   unit: number;
   unitPrice: number;
   brokerFee: number;
-  totalPrice?: number;
+  totalAmount?: number;
   remark: string;
 }
 
