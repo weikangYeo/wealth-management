@@ -64,13 +64,13 @@ type Price struct {
 }
 
 type Overview struct {
-	StockName     string      `json:"stockName"`
-	DisplayName   string      `json:"displayName"`
-	BursaStockId  string      `json:"bursaStockId"`
-	TotalDividend apd.Decimal `json:"totalDividend"`
-	AveragePrice  apd.Decimal `json:"averagePrice"` // average price per stock unit (fee inclusive)
-	TotalUnit     apd.Decimal `json:"totalUnit"`
-	RealizedGain  apd.Decimal `json:"realizedGain"`
+	StockName        string      `json:"stockName"`
+	DisplayName      string      `json:"displayName"`
+	BursaStockId     string      `json:"bursaStockId"`
+	TotalDividend    apd.Decimal `json:"totalDividend"`
+	AveragePrice     apd.Decimal `json:"averagePrice"` // average price per stock unit (fee inclusive)
+	TotalUnit        apd.Decimal `json:"totalUnit"`
+	RealizedGainLoss apd.Decimal `json:"realizedGainLoss"`
 }
 
 // Position mean `holding` at a given/specific time in stock trading domain

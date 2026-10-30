@@ -10,7 +10,7 @@ export interface CreateStockModel {
 export interface StockOverview extends CreateStockModel {
   dividendYield: number;
   averagePrice: number;
-  unit: number;
+  totalUnit: number;
   profitLostPercentage: number;
   realizedGainLoss: 0,
   unrealizedGainLoss: 0,

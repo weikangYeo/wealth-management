@@ -22,13 +22,13 @@ func computeOverview(stock Stock, txns []Txn, dividends []Dividend) (Overview, e
 		return Overview{}, err
 	}
 	overview := Overview{
-		StockName:     stock.StockName,
-		DisplayName:   stock.DisplayName,
-		BursaStockId:  stock.BursaStockId,
-		TotalDividend: *totalDiv,
-		AveragePrice:  averageCost,
-		TotalUnit:     position.unit,
-		RealizedGain:  position.realizedGain,
+		StockName:        stock.StockName,
+		DisplayName:      stock.DisplayName,
+		BursaStockId:     stock.BursaStockId,
+		TotalDividend:    *totalDiv,
+		AveragePrice:     averageCost,
+		TotalUnit:        position.unit,
+		RealizedGainLoss: position.realizedGain,
 	}
 	return overview, nil
 }
@@ -100,6 +100,9 @@ func computePosition(txns []Txn) (Position, error) {
 }
 
 func (p Position) getAveragePrice() (apd.Decimal, error) {
+	if p.unit.IsZero() {
+		return apd.Decimal{}, nil
+	}
 	decimalCtx := apd.BaseContext.WithPrecision(14)
 	result := new(apd.Decimal)
 	if _, err := decimalCtx.Quo(result, &p.cost, &p.unit); err != nil {

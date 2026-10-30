@@ -120,8 +120,8 @@ func TestComputeOverview(t *testing.T) {
 		t.Fatalf("want %v, got %v", toDecimal("7.7181818181818"), &result.AveragePrice)
 	}
 
-	if result.RealizedGain.Cmp(toDecimal("36.3636363636")) != 0 {
-		t.Fatalf("want %v, got %v", toDecimal("36.3636363636"), &result.RealizedGain)
+	if result.RealizedGainLoss.Cmp(toDecimal("36.3636363636")) != 0 {
+		t.Fatalf("want %v, got %v", toDecimal("36.3636363636"), &result.RealizedGainLoss)
 	}
 }
 

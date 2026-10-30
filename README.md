@@ -102,6 +102,9 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
         - [ ] Capital Grow over the years/anuallized return per year since this stock is purchased ?
         - [ ] GET Stock API to include DY or other aggregated info I interested the most
         - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
+    - [ ] Tax Planner
+      - [ ] Pull Income Tax incentive up to current date
+      - [ ] Chart to show % completeness
 - [ ] Watch list
     - [ ] The ETL process of web scraped data and how to process it
 - [ ] AI suggestion, based on scrapped info, feed to LLM to provide suggestion
@@ -144,6 +147,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
     - [ ] unit test those value
     - [ ] show in FE
+- Show aggregate info in stock detail page
 
 - Portfolio Overview
 - MCP, to interact with Claude

@@ -21,7 +21,7 @@ export class StockDetail {
     stockName: '',
     displayName: '',
     bursaStockId: '',
-    unit: 0,
+    totalUnit: 0,
     averagePrice: 0,
     realizedGainLoss: 0,
     unrealizedGainLoss: 0,
