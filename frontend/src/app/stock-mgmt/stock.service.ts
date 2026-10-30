@@ -19,7 +19,7 @@ export class StockService {
   }
 
   getStockOverviewByStockName(stockName: string) {
-    return this.http.get<StockOverview>(`${this.STOCK_DOMAIN_API_URL}/${stockName}/overviews`);
+    return this.http.get<StockOverview>(`${this.STOCK_DOMAIN_API_URL}/${stockName}`);
   }
 
   getStockTransactionsByStockName(stockName: string) {

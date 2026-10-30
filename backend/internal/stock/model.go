@@ -67,10 +67,11 @@ type Overview struct {
 	StockName        string      `json:"stockName"`
 	DisplayName      string      `json:"displayName"`
 	BursaStockId     string      `json:"bursaStockId"`
-	TotalDividend    apd.Decimal `json:"totalDividend"`
 	AveragePrice     apd.Decimal `json:"averagePrice"` // average price per stock unit (fee inclusive)
 	TotalUnit        apd.Decimal `json:"totalUnit"`
 	RealizedGainLoss apd.Decimal `json:"realizedGainLoss"`
+	TotalDividend    apd.Decimal `json:"totalDividend"`
+	DividendPayback  apd.Decimal `json:"dividendPayback"`
 }
 
 // Position mean `holding` at a given/specific time in stock trading domain
@@ -139,6 +140,25 @@ func (t *Txn) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (o Overview) MarshalJSON() ([]byte, error) {
+	type Alias Overview
+	return json.Marshal(&struct {
+		AveragePrice     json.Number `json:"averagePrice"`
+		TotalUnit        json.Number `json:"totalUnit"`
+		RealizedGainLoss json.Number `json:"realizedGainLoss"`
+		TotalDividend    json.Number `json:"totalDividend"`
+		DividendPayback  json.Number `json:"dividendPayback"`
+		Alias
+	}{
+		AveragePrice:     json.Number(o.AveragePrice.String()),
+		TotalUnit:        json.Number(o.TotalUnit.String()),
+		RealizedGainLoss: json.Number(o.RealizedGainLoss.String()),
+		TotalDividend:    json.Number(o.TotalDividend.String()),
+		DividendPayback:  json.Number(o.DividendPayback.String()),
+		Alias:            (Alias)(o),
+	})
+}
+
 func (d *DividendRequest) UnmarshalJSON(data []byte) error {
 	type Alias DividendRequest
 	aux := &struct {
@@ -184,7 +204,7 @@ func (dividend *Dividend) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		StockUnit       json.Number `json:"stockUnit"`
 		DividendPerUnit json.Number `json:"dividendPerUnit"`
-		TaxPercentage   json.Number `json:"TaxPercentage"`
+		TaxPercentage   json.Number `json:"taxPercentage"`
 		GrossAmount     json.Number `json:"grossAmount"`
 		NetAmount       json.Number `json:"netAmount"`
 		*Alias

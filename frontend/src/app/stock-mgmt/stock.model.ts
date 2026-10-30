@@ -12,10 +12,10 @@ export interface StockOverview extends CreateStockModel {
   averagePrice: number;
   totalUnit: number;
   profitLostPercentage: number;
-  realizedGainLoss: 0,
-  unrealizedGainLoss: 0,
-  annualizedReturn: 0,
-  // todo fill in another details
+  realizedGainLoss: number;
+  unrealizedGainLoss: number;
+  annualizedReturn: number;
+  dividendPayback: number;
 }
 
 export interface StockTxn {

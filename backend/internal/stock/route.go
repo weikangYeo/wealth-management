@@ -15,7 +15,7 @@ func RegisterStockRoutes(r *gin.Engine, db *sql.DB) {
 		stockRoutes.POST("", stockHandler.createStock)
 		stockRoutes.GET("/:stockName/transactions", stockHandler.getAllStockTransactions)
 		// rename to /:stockName to make it consistent with GET stocks which provide aggregate info
-		stockRoutes.GET("/:stockName/overviews", stockHandler.getStock)
+		stockRoutes.GET("/:stockName", stockHandler.getStock)
 		stockRoutes.POST("/:stockName/transactions", stockHandler.createStockTxn)
 		stockRoutes.PUT("/:stockName/transactions/:txnId", stockHandler.updateStockTxn)
 		stockRoutes.GET("/:stockName/dividends", stockHandler.getDividendsByStockName)

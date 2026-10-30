@@ -82,8 +82,8 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
             - [x] total dividends
             - [ ] DY (on market)
             - [ ] Dividend Yield on Cost
-            - [ ] Dividend Return (cumulative dividends / cost basis)
-            - [ ] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
+            - [X] Dividend Payback (cumulative dividends / cost basis)
+            - [ ] ROI/Total Return (unrealized P/L + realized P/L + dividends received) / total cost invested
             - [ ] avg price
             - [ ] total unit
             - [ ] unrealized return
@@ -133,13 +133,12 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 
 ### Next todo
 
-- Make totalPrice consistent across modules (gold, stock, fund), also fix stock's SELL txn totalPrice
 - Setup stock aggregate info, in /overviews API and get stock details API, and FE show it
     - [x] avg price
     - [x] total unit
     - [ ] DY (on market)
     - [ ] Dividend Yield on Cost
-    - [ ] Dividend Return (cumulative dividends / cost basis)
+    - [X] Dividend Payback (cumulative dividends / cost basis)
     - [ ] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
     - [ ] unrealized return
     - [x] realized return

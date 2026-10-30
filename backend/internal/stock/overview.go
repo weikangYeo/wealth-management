@@ -21,6 +21,15 @@ func computeOverview(stock Stock, txns []Txn, dividends []Dividend) (Overview, e
 	if err != nil {
 		return Overview{}, err
 	}
+
+	dividendPayback := new(apd.Decimal)
+	if !position.cost.IsZero() {
+		decimalCtx := apd.BaseContext.WithPrecision(14)
+		if _, err := decimalCtx.Quo(dividendPayback, totalDiv, &position.cost); err != nil {
+			return Overview{}, err
+		}
+	}
+
 	overview := Overview{
 		StockName:        stock.StockName,
 		DisplayName:      stock.DisplayName,
@@ -29,6 +38,7 @@ func computeOverview(stock Stock, txns []Txn, dividends []Dividend) (Overview, e
 		AveragePrice:     averageCost,
 		TotalUnit:        position.unit,
 		RealizedGainLoss: position.realizedGain,
+		DividendPayback:  *dividendPayback,
 	}
 	return overview, nil
 }

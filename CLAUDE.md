@@ -27,10 +27,11 @@ Screener, fund houses) using chromedp (headless Chrome) since some sources have 
 ### Backend (`cd backend` first — required, since the module uses `internal/`)
 
 - Run web server: `go run cmd/server/main.go` (port 8080; runs DB migrations on boot)
-- Run scraper: `go run cmd/scraper/main.go` (does NOT run migrations; currently only calls
-  `fund.ScrapeFundNavAndIncomeDist`)
+- Run scraper: `go run cmd/scraper/main.go` (does NOT run migrations; runs `gold.ScrapeGoldPrice`,
+  `stock.ScrapeStockLastDonePrice`, then `fund.ScrapeFundNavAndIncomeDist`)
 - Build: `go build ./...`
-- Test: `go test ./...` (no tests exist yet in the codebase)
+- Test: `go test ./...` (some tests hit live sites, e.g. `scrape-utils_test.go`'s `TestGetHtmlStringFromUrlViaChrome`;
+  run a single one with `go test ./internal/fund/... -run TestName`)
 - Vet/format: `go vet ./...`, `gofmt -l .`
 
 ### Frontend (`cd frontend` first)
@@ -134,6 +135,24 @@ directly in `scraper.go` (not via the handler) set both fields inline rather tha
 the two in sync if the formula changes. `netInvestmentAmount` is what feeds "avg unit price" style calculations
 (unaffected by fees); `totalAmount` is what feeds "cash invested" calculations (excludes reinvestment).
 
+Stock's `Txn.TotalAmount` (`internal/stock/model.go`, `CalculateStockTxnTotalAmount`) follows the same "cash that
+moved" meaning: `unit × unitPrice + brokerFee` on `BUY`, `− brokerFee` on `SELL`. Stock has no separate fee-exclusive
+field.
+
+### Stock aggregates: computed on read
+
+Per-stock figures (units held, average price, realized gain, total dividend) are not stored. They are recomputed on
+every request by pure functions in `internal/stock/overview.go`: `computePosition` replays a stock's transactions in
+date order (stable sort, so same-day rows keep DB order) using the average-cost method, where a `SELL` removes
+`cost × soldUnits / unitsHeld` from cost and realized gain = net proceeds − that removed cost. `computeOverview` builds
+the `Overview` response from the position plus dividends. Transactions are entered and edited by hand, so a stored
+aggregate would go stale; compute-on-read keeps it correct for free.
+
+`GET /stocks` returns `[]Overview` for the listing page: the handler loads all stocks, all transactions and all
+dividends with one query each, groups them by `StockName` in Go, then calls `computeOverview` per stock. Don't add
+per-stock queries inside that loop (N+1). The single-stock endpoint reuses the same `computeOverview`, so list and
+detail can't disagree.
+
 ### Scraping infra
 
 `internal/platform/scrape.GetHtmlStringFromUrlViaChrome` drives headless Chrome via chromedp to fetch a page's
@@ -167,6 +186,20 @@ Angular (standalone components, no NgModules), Material for UI components, Tailw
 under `frontend/src/app/` (`gold-mgmt`, `stock-mgmt`, `funds-mgmt`) each hold a `*.service.ts` (HTTP calls to the Go
 backend), `*.model.ts` (TS interfaces mirroring backend structs), and page components. `interceptors/api.interceptor.ts`
 handles outgoing API request concerns centrally.
+
+### Backend testing conventions
+
+No mocking library — tests use hand-written fakes:
+
+- Interfaces are small and declared in the consuming file, not next to the implementation (e.g.
+  `pullIncomeDistStartDateRepo` / `incomeDistributionRepo` in `fund/scraper.go`, embedded rather than one big repo
+  interface). The concrete `*repository` satisfies them implicitly.
+- Fakes are structs whose fields set each method's return value, with pointer receivers so they can record calls for
+  assertions (e.g. `mockRepo.insertedFundTxn` in `fund/scraper_test.go`). Pass them as `&fake`.
+- Tests are table-driven with `t.Run`; error cases are matched with `errors.Is` against sentinel errors (e.g.
+  `errNoTxn`).
+- Keep calculation logic in pure functions that take already-loaded data (like `computePosition`), so it's tested
+  without a DB or a fake at all. Provider parsers are tested against saved HTML/PDF text in `testdata/`.
 
 ## Notes
 
