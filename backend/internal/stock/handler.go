@@ -1,6 +1,8 @@
 package stock
 
 import (
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 
@@ -36,6 +38,12 @@ func (handler *handler) getAllStock(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	latestPrices, err := handler.stockRepo.getAllStockLatestPrice()
+	if err != nil {
+		log.Printf("Error getting all stock latest prices: %v", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	txnByStockName := make(map[string][]Txn)
 	for _, t := range txns {
 		// append will "append" t to `txnByStockName[t.StockName]` collection, then assign (replace) to txnByStockName[t.StockName]
@@ -45,12 +53,17 @@ func (handler *handler) getAllStock(context *gin.Context) {
 	for _, d := range divs {
 		divByStockName[d.StockName] = append(divByStockName[d.StockName], d)
 	}
+	priceByStockName := make(map[string]apd.Decimal)
+	for _, d := range latestPrices {
+		priceByStockName[d.StockName] = d.LastDonePrice
+	}
 	// length 0 (no item), but capacity = size of stock to avoid resize in iteration
 	overviews := make([]Overview, 0, len(stocks))
 	for _, s := range stocks {
 		stockTxn := txnByStockName[s.StockName]
 		stockDiv := divByStockName[s.StockName]
-		overview, err := computeOverview(s, stockTxn, stockDiv)
+		lastDonePrice := priceByStockName[s.StockName]
+		overview, err := computeOverview(s, stockTxn, stockDiv, lastDonePrice)
 		if err != nil {
 			log.Printf("Error compute overview: %v", err)
 			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -75,13 +88,23 @@ func (handler *handler) getStock(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	dividends, err := handler.stockRepo.getDividendByStockName(stock.StockName)
+	dividends, err := handler.stockRepo.getDividendByStockName(stockName)
 	if err != nil {
 		log.Printf("Error getting dividends: %v", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	overview, err := computeOverview(stock, txns, dividends)
+	lastDonePrice, err := handler.stockRepo.getLatestPriceByStockName(stockName)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Error getting last done price: %v", err)
+			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// default to 0 if not scraped
+		lastDonePrice = apd.Decimal{}
+	}
+	overview, err := computeOverview(stock, txns, dividends, lastDonePrice)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

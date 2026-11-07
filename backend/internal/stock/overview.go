@@ -7,8 +7,7 @@ import (
 	"github.com/cockroachdb/apd/v3"
 )
 
-// todo unit test individual computation logic
-func computeOverview(stock Stock, txns []Txn, dividends []Dividend) (Overview, error) {
+func computeOverview(stock Stock, txns []Txn, dividends []Dividend, lastDonePrice apd.Decimal) (Overview, error) {
 	totalDiv, err := getTotalDividend(dividends)
 	if err != nil {
 		return Overview{}, err
@@ -21,26 +20,42 @@ func computeOverview(stock Stock, txns []Txn, dividends []Dividend) (Overview, e
 	if err != nil {
 		return Overview{}, err
 	}
+	unrealizedGainLoss, err := position.getUnrealizedGainLoss(lastDonePrice)
+	if err != nil {
+		return Overview{}, err
+	}
+	roi, err := position.getRoi(unrealizedGainLoss, *totalDiv)
+	if err != nil {
+		return Overview{}, err
+	}
+	dividendPayback, err := getDividendPayback(position, totalDiv)
+	if err != nil {
+		return Overview{}, err
+	}
+	overview := Overview{
+		StockName:          stock.StockName,
+		DisplayName:        stock.DisplayName,
+		BursaStockId:       stock.BursaStockId,
+		TotalDividend:      *totalDiv,
+		AveragePrice:       averageCost,
+		TotalUnit:          position.unit,
+		DividendPayback:    *dividendPayback,
+		RealizedGainLoss:   position.realizedGain,
+		UnrealizedGainLoss: unrealizedGainLoss,
+		Roi:                roi,
+	}
+	return overview, nil
+}
 
+func getDividendPayback(position Position, totalDiv *apd.Decimal) (*apd.Decimal, error) {
 	dividendPayback := new(apd.Decimal)
 	if !position.cost.IsZero() {
 		decimalCtx := apd.BaseContext.WithPrecision(14)
 		if _, err := decimalCtx.Quo(dividendPayback, totalDiv, &position.cost); err != nil {
-			return Overview{}, err
+			return nil, err
 		}
 	}
-
-	overview := Overview{
-		StockName:        stock.StockName,
-		DisplayName:      stock.DisplayName,
-		BursaStockId:     stock.BursaStockId,
-		TotalDividend:    *totalDiv,
-		AveragePrice:     averageCost,
-		TotalUnit:        position.unit,
-		RealizedGainLoss: position.realizedGain,
-		DividendPayback:  *dividendPayback,
-	}
-	return overview, nil
+	return dividendPayback, nil
 }
 
 // computePosition replay all transaction asc by txnDate, then compute unit, cost, realized gain at given time.
@@ -119,6 +134,44 @@ func (p Position) getAveragePrice() (apd.Decimal, error) {
 		return *result, err
 	}
 	return *result, nil
+}
+
+func (p Position) getUnrealizedGainLoss(lastDonePrice apd.Decimal) (apd.Decimal, error) {
+	if p.unit.IsZero() {
+		return apd.Decimal{}, nil
+	}
+	averagePrice, err := p.getAveragePrice()
+	if err != nil {
+		return apd.Decimal{}, err
+	}
+	gainLossDiff := new(apd.Decimal)
+	ctx := apd.BaseContext.WithPrecision(14)
+	if _, err := ctx.Sub(gainLossDiff, &lastDonePrice, &averagePrice); err != nil {
+		return apd.Decimal{}, err
+	}
+	if _, err := ctx.Mul(gainLossDiff, gainLossDiff, &p.unit); err != nil {
+		return apd.Decimal{}, err
+	}
+	return *gainLossDiff, err
+}
+
+// ROI = (unrealized P/L + realized P/L + dividends received) / total cost invested
+func (p Position) getRoi(unrealizedRealGain apd.Decimal, totalDividend apd.Decimal) (apd.Decimal, error) {
+	if p.cost.IsZero() {
+		return apd.Decimal{}, nil
+	}
+	roi := new(apd.Decimal)
+	ctx := apd.BaseContext.WithPrecision(14)
+	if _, err := ctx.Add(roi, &unrealizedRealGain, &p.realizedGain); err != nil {
+		return apd.Decimal{}, err
+	}
+	if _, err := ctx.Add(roi, roi, &totalDividend); err != nil {
+		return apd.Decimal{}, err
+	}
+	if _, err := ctx.Quo(roi, roi, &p.cost); err != nil {
+		return apd.Decimal{}, err
+	}
+	return *roi, nil
 }
 
 func getTotalDividend(dividends []Dividend) (*apd.Decimal, error) {

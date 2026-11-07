@@ -50,12 +50,13 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
         - [ ] P&L
         - [ ] annualized return
         - [ ] calendar return
-        - [ ] Investment type
+        - [ ] Investment type allocation
             - [ ] Gold
             - [ ] Funds
             - [ ] Stock (CARD BASE)
                 - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
             - [ ] Cash
+        - 
     - [X] Gold
         - [X] Import/Export
             - [X] Upsert Gold Txn
@@ -103,14 +104,18 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
         - [ ] GET Stock API to include DY or other aggregated info I interested the most
         - [ ] Design a mechanism to calculate the aggregated info, on demand vs job vs app start vs etc...
     - [ ] Tax Planner
-      - [ ] Pull Income Tax incentive up to current date
-      - [ ] Chart to show % completeness
+        - [ ] Pull Income Tax incentive up to current date
+        - [ ] Chart to show % completeness
 - [ ] Watch list
     - [ ] The ETL process of web scraped data and how to process it
-- [ ] AI suggestion, based on scrapped info, feed to LLM to provide suggestion
+- [ ] AI Insight/AI suggestion, based on scrapped info, feed to LLM to provide suggestion
     - [ ] compare LLM rules and custom defined (by dev) rules
+    - [ ] 2 ways to handle this at the moment, one use Ollama as model, then provide insight
+    - [ ] Expose MCP, let Claude Client connect and handle, so the agent part (RAG, web search etc) happen in Claude
+      side.
 - [ ] Tech Debts
     - [ ] Makefile
+    - [ ] Stock - In dividend in spices case, make cost become non 0 by contra the original stock and dividend stock (e.g. stock A get "dividend" and calculate the cash value of it, stock B manual insert a "buy" txn to have cost)
     - [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
     - [ ] Host privately in Home network
         - [ ] local domain name so it can be navigated via url
@@ -132,22 +137,25 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 ## Note for future self
 
 ### Next todo
-
 - Setup stock aggregate info, in /overviews API and get stock details API, and FE show it
     - [x] avg price
     - [x] total unit
     - [ ] DY (on market)
     - [ ] Dividend Yield on Cost
     - [X] Dividend Payback (cumulative dividends / cost basis)
-    - [ ] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
-    - [ ] unrealized return
+    - [X] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
+    - [X] unrealized return
     - [x] realized return
     - [ ] Annualized return
     - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
     - [ ] unit test those value
     - [ ] show in FE
 - Show aggregate info in stock detail page
-
+- [ ] AI Integration - Profolio API
+- [ ] What questions I want AI to answer, it influence I should priotize MCP or integrate with Ollama
+  - Next investment focus/next allocation
+  - Monthly investment adjustment?
+  - Can it relate with Global news? to suggest the possible impact
 - Portfolio Overview
 - MCP, to interact with Claude
     - Might need to do overall profolio APIs first

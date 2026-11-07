@@ -39,37 +39,6 @@ func TestGetTotalDividend(t *testing.T) {
 	}
 }
 
-//func TestGetAveragePrice(t *testing.T) {
-//	given := []Txn{
-//		{
-//			ID:         "some-uuid1",
-//			StockName:  "CIMB",
-//			TxnDate:    time.Date(2021, time.January, 1, 1, 0, 0, 0, time.UTC),
-//			Unit:       *toDecimal("300"),
-//			UnitPrice:  *toDecimal("7.45"),
-//			BrokerFee:  *toDecimal("10"),
-//			TotalPrice: *toDecimal("2245"),
-//		},
-//		{
-//			ID:         "some-uuid2",
-//			StockName:  "CIMB",
-//			TxnDate:    time.Date(2021, time.January, 1, 1, 0, 0, 0, time.UTC),
-//			Unit:       *toDecimal("800"),
-//			UnitPrice:  *toDecimal("7.79"),
-//			BrokerFee:  *toDecimal("13"),
-//			TotalPrice: *toDecimal("6245"),
-//		},
-//	}
-//
-//	result, err := getAveragePrice(given)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	if result.Cmp(toDecimal("7.7181818181818")) != 0 {
-//		t.Fatalf("want %v, got %v", toDecimal("7.7181818182"), result)
-//	}
-//}
-
 func TestComputeOverview(t *testing.T) {
 	given := []Txn{
 		{
@@ -108,7 +77,26 @@ func TestComputeOverview(t *testing.T) {
 		DisplayName:  "CIMB",
 		BursaStockId: "1234",
 	}
-	result, err := computeOverview(mockStock, given, []Dividend{})
+	givenDividend := []Dividend{
+		{
+			StockName:       "CIMB",
+			PaymentDate:     time.Date(2021, time.December, 1, 1, 0, 0, 0, time.UTC),
+			StockUnit:       *toDecimal("300"),
+			DividendPerUnit: *toDecimal("100"),
+			GrossAmount:     *toDecimal("300"),
+			NetAmount:       *toDecimal("300"),
+		},
+		{
+			StockName:       "CIMB",
+			PaymentDate:     time.Date(2022, time.December, 1, 1, 0, 0, 0, time.UTC),
+			StockUnit:       *toDecimal("800"),
+			DividendPerUnit: *toDecimal("100"),
+			GrossAmount:     *toDecimal("1100"),
+			NetAmount:       *toDecimal("1100"),
+		},
+	}
+	lastDonePrice := toDecimal("2.1")
+	result, err := computeOverview(mockStock, given, givenDividend, *lastDonePrice)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,9 +107,62 @@ func TestComputeOverview(t *testing.T) {
 	if result.AveragePrice.Cmp(toDecimal("7.7181818181818")) != 0 {
 		t.Fatalf("want %v, got %v", toDecimal("7.7181818181818"), &result.AveragePrice)
 	}
-
 	if result.RealizedGainLoss.Cmp(toDecimal("36.3636363636")) != 0 {
 		t.Fatalf("want %v, got %v", toDecimal("36.3636363636"), &result.RealizedGainLoss)
+	}
+	if result.DividendPayback.Cmp(toDecimal("0.20154430048423")) != 0 {
+		t.Fatalf("want %v, got %v", toDecimal("0.20154430048423"), &result.DividendPayback)
+	}
+}
+
+func TestGetDividendPayback(t *testing.T) {
+	position := Position{
+		unit:         *toDecimal("100"),
+		cost:         *toDecimal("1000"),
+		realizedGain: apd.Decimal{},
+	}
+	totalDiv := toDecimal("100")
+	result, err := getDividendPayback(position, totalDiv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := toDecimal("0.1")
+	if result.Cmp(expected) != 0 {
+		t.Fatalf("want %v, got %v", expected, &result)
+	}
+}
+
+func TestGetUnrealizedGainLoss(t *testing.T) {
+	position := Position{
+		unit:         *toDecimal("200"),
+		cost:         *toDecimal("1794"),
+		realizedGain: apd.Decimal{},
+	}
+	lastDonePrice := toDecimal("10.120")
+	result, err := position.getUnrealizedGainLoss(*lastDonePrice)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := toDecimal("230.00")
+	if result.Cmp(expected) != 0 {
+		t.Fatalf("want %v, got %v", expected, result)
+	}
+}
+
+func TestGetRoi(t *testing.T) {
+	position := Position{
+		unit:         *toDecimal("200"),
+		cost:         *toDecimal("1794"),
+		realizedGain: *toDecimal("2000"),
+	}
+	totalDividend := toDecimal("200")
+	result, err := position.getRoi(*toDecimal("230.00"), *totalDividend)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := toDecimal("1.3545150501672")
+	if result.Cmp(expected) != 0 {
+		t.Fatalf("want %v, got %v", expected, result)
 	}
 }
 

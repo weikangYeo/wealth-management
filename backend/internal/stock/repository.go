@@ -262,3 +262,36 @@ func (r repository) createStockPrice(stockPrice Price) error {
 	}
 	return tx.Commit()
 }
+
+func (r repository) getAllStockLatestPrice() ([]Price, error) {
+	rows, err := r.db.Query(`select stock_name, price_date, last_done_price 
+		from (
+            select stock_name, price_date, last_done_price, 
+                   ROW_NUMBER() over (PARTITION BY stock_name order by price_date desc) as rn
+            from stock_price
+		) t
+		where t.rn = 1`)
+	if err != nil {
+		return []Price{}, err
+	}
+	var result []Price
+	for rows.Next() {
+		var price Price
+		if err := rows.Scan(&price.StockName, &price.PriceDate, &price.LastDonePrice); err != nil {
+			return []Price{}, err
+		}
+		result = append(result, price)
+	}
+
+	return result, nil
+}
+
+func (r repository) getLatestPriceByStockName(stockName string) (apd.Decimal, error) {
+	price := new(apd.Decimal)
+	err := r.db.QueryRow("select last_done_price from stock_price where stock_name = ? order by price_date desc limit 1", stockName).
+		Scan(price)
+	if err != nil {
+		return apd.Decimal{}, err
+	}
+	return *price, nil
+}
