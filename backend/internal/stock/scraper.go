@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 	"wealth-management/internal/platform/decimal"
@@ -13,6 +12,9 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/cockroachdb/apd/v3"
 )
+
+const bursaStockUrl = "https://www.bursamalaysia.com/trade/trading_resources/listing_directory/company-profile"
+const klseStockUrl = "https://www.klsescreener.com/v2/stocks/view/"
 
 type klseDividend struct {
 	ExDate          time.Time
@@ -33,7 +35,7 @@ func ScrapeStockLastDonePrice(db *sql.DB) {
 }
 
 func scrapeStockData(stockRepo *repository, s Stock) {
-	klseURL := os.Getenv("KLSE_STOCK_BASE_URL") + s.BursaStockId
+	klseURL := klseStockUrl + s.BursaStockId
 	html, err := scrape.GetHtmlStringFromUrlViaChrome(klseURL)
 	if err != nil {
 		log.Printf("KLSE scrape failed for %s: %v, falling back to old source", s.StockName, err)
@@ -112,7 +114,7 @@ func scrapeStockData(stockRepo *repository, s Stock) {
 }
 
 func scrapeAndSavePriceFromOldSource(stockRepo *repository, s Stock) {
-	targetURL := os.Getenv("STOCK_URL") + "?stock_code=" + s.BursaStockId
+	targetURL := bursaStockUrl + "?stock_code=" + s.BursaStockId
 	html, err := scrape.GetHtmlStringFromUrlViaChrome(targetURL)
 	if err != nil {
 		log.Printf("Old source scrape failed for %s: %v", s.StockName, err)
@@ -205,13 +207,4 @@ func getLastDonePriceFromHtmlStr(html string) string {
 	priceText = strings.Join(strings.Fields(priceText), " ")
 	log.Println("Old source price:", priceText)
 	return priceText
-}
-
-func getTestingHtmlPage() string {
-	log.Println("Scraping from local testing file")
-	contentBytes, err := os.ReadFile("../resources/test-material/scrape/stock_company_profile_capital_a.htm")
-	if err != nil {
-		log.Fatalf("unable to read file: %v", err)
-	}
-	return string(contentBytes)
 }

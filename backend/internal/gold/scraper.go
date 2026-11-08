@@ -2,7 +2,6 @@ package gold
 
 import (
 	"log"
-	"os"
 	"strings"
 	"time"
 	"wealth-management/internal/platform/database"
@@ -12,8 +11,12 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+// todo make it become a db table value when provider > 1
+// Since I only pull from one provider, just make it a constant
+const goldUrl = "https://www.maybank2u.com.my/maybank2u/malaysia/en/personal/rates/gold_and_silver.page"
+
 func ScrapeGoldPrice() {
-	targetURL := os.Getenv("GOLD_URL")
+	targetURL := goldUrl
 	html, err := scrape.GetHtmlStringFromUrlViaChrome(targetURL)
 	if err != nil {
 		log.Fatal(err)

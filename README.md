@@ -20,9 +20,6 @@ Install these before running the project:
 ```
 DBUSER=<replace with your username>
 DBPASS=<replace with your password>
-GOLD_URL=<Url to scrape gold price> // now it only support 1 local
-STOCK_URL=<Url to scrape stock price> // now it only support bursa company profile
-KLSE_STOCK_BASE_URL=<url to scrape klse index price>
 ```
 
 - run `start-all.sh` to start BE (web server) + FE
@@ -56,7 +53,7 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
             - [ ] Stock (CARD BASE)
                 - [ ] Total Dividends, Unrealized Profit, Realized Profit, annualized returned, average DY
             - [ ] Cash
-        - 
+        - [ ] AI Insight
     - [X] Gold
         - [X] Import/Export
             - [X] Upsert Gold Txn
@@ -84,11 +81,11 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
             - [ ] DY (on market)
             - [ ] Dividend Yield on Cost
             - [X] Dividend Payback (cumulative dividends / cost basis)
-            - [ ] ROI/Total Return (unrealized P/L + realized P/L + dividends received) / total cost invested
-            - [ ] avg price
-            - [ ] total unit
-            - [ ] unrealized return
-            - [ ] realized return
+            - [X] ROI/Total Return (unrealized P/L + realized P/L + dividends received) / total cost invested
+            - [X] avg price
+            - [X] total unit
+            - [X] unrealized return
+            - [X] realized return
             - [ ] Annualized return
             - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
         - [x] Scrape Stock Price
@@ -106,6 +103,9 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
     - [ ] Tax Planner
         - [ ] Pull Income Tax incentive up to current date
         - [ ] Chart to show % completeness
+    - [ ] Admin Portal
+        - [ ] Generate a Backup Output file
+        - [ ] Import from Backup
 - [ ] Watch list
     - [ ] The ETL process of web scraped data and how to process it
 - [ ] AI Insight/AI suggestion, based on scrapped info, feed to LLM to provide suggestion
@@ -124,31 +124,23 @@ KLSE_STOCK_BASE_URL=<url to scrape klse index price>
           (PostgreSQL, free tier). This gets you a fully free, real SQL, real server stack indefinitely — just with the
           App Service CPU constraint.
     - [X] Revamp UI
-    - [ ] Onboard Data (to this system) and back up
-    - [ ] Run script to start everything via a script
+    - [X] Onboard Data (to this system) and back up
+    - [X] Run script to start everything via a script
     - [ ] register it as win/mac service so it auto start when pc boot
     - [ ] MCP support, allow AI to manipulate data for me, such as run
-    - [ ] Performance enhancement, read table for aggregated data (Yes please, do at scraper logic)
     - [ ] Performance enhancement, no-opt if duplicated run on the same day.
     - [ ] Vault/KV server to before host (probably package it and deploy as side-car container)
-    - [ ] scrape url moving from .env back to static value in go file, since we are building logic base on a specific
+    - [X] scrape url moving from .env back to static value in go file, since we are building logic base on a specific
       url only.
 
 ## Note for future self
 
 ### Next todo
 - Setup stock aggregate info, in /overviews API and get stock details API, and FE show it
-    - [x] avg price
-    - [x] total unit
     - [ ] DY (on market)
     - [ ] Dividend Yield on Cost
-    - [X] Dividend Payback (cumulative dividends / cost basis)
-    - [X] ROI (unrealized P/L + realized P/L + dividends received) / total cost invested
-    - [X] unrealized return
-    - [x] realized return
     - [ ] Annualized return
     - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
-    - [ ] unit test those value
     - [ ] show in FE
 - Show aggregate info in stock detail page
 - [ ] AI Integration - Profolio API

@@ -17,9 +17,6 @@ Screener, fund houses) using chromedp (headless Chrome) since some sources have 
   ```
   DBUSER=<db username>
   DBPASS=<db password>
-  GOLD_URL=<url to scrape gold price>
-  STOCK_URL=<url to scrape stock price (bursa company profile)>
-  KLSE_STOCK_BASE_URL=<url to scrape klse index price>
   ```
 - DB schema migrations run automatically on server startup (`golang-migrate`, files in `devops/database/migrations`).
   There is no separate migrate CLI invocation in this repo — just start the server.

@@ -20,6 +20,9 @@ func main() {
 	}
 	log.Println("Starting scraper")
 	gold.ScrapeGoldPrice()
+	log.Println("Gold Price Scraped")
 	stock.ScrapeStockLastDonePrice(db)
+	log.Println("Stock Price and Income Dist Scraped")
 	fund.ScrapeFundNavAndIncomeDist(db)
+	log.Println("Fund Price and Income Dist Scraped")
 }
