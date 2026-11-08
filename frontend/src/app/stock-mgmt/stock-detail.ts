@@ -27,8 +27,9 @@ export class StockDetail {
     unrealizedGainLoss: 0,
     annualizedReturn: 0,
     dividendYield: 0,
-    profitLostPercentage: 0,
-    dividendPayback: 0
+    dividendPayback: 0,
+    roi: 0,
+    totalDividend:0
   });
 
   // signal to control the add stock/dividend tab

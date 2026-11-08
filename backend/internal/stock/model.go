@@ -145,19 +145,24 @@ func (t *Txn) MarshalJSON() ([]byte, error) {
 func (o Overview) MarshalJSON() ([]byte, error) {
 	type Alias Overview
 	return json.Marshal(&struct {
-		AveragePrice     json.Number `json:"averagePrice"`
-		TotalUnit        json.Number `json:"totalUnit"`
-		RealizedGainLoss json.Number `json:"realizedGainLoss"`
-		TotalDividend    json.Number `json:"totalDividend"`
-		DividendPayback  json.Number `json:"dividendPayback"`
+		AveragePrice       json.Number `json:"averagePrice"`
+		TotalUnit          json.Number `json:"totalUnit"`
+		TotalDividend      json.Number `json:"totalDividend"`
+		DividendPayback    json.Number `json:"dividendPayback"`
+		RealizedGainLoss   json.Number `json:"realizedGainLoss"`
+		UnrealizedGainLoss json.Number `json:"unrealizedGainLoss"`
+		Roi                json.Number `json:"roi"`
+
 		Alias
 	}{
-		AveragePrice:     json.Number(o.AveragePrice.String()),
-		TotalUnit:        json.Number(o.TotalUnit.String()),
-		RealizedGainLoss: json.Number(o.RealizedGainLoss.String()),
-		TotalDividend:    json.Number(o.TotalDividend.String()),
-		DividendPayback:  json.Number(o.DividendPayback.String()),
-		Alias:            (Alias)(o),
+		AveragePrice:       json.Number(o.AveragePrice.String()),
+		TotalUnit:          json.Number(o.TotalUnit.String()),
+		TotalDividend:      json.Number(o.TotalDividend.String()),
+		DividendPayback:    json.Number(o.DividendPayback.String()),
+		RealizedGainLoss:   json.Number(o.RealizedGainLoss.String()),
+		UnrealizedGainLoss: json.Number(o.UnrealizedGainLoss.String()),
+		Roi:                json.Number(o.Roi.String()),
+		Alias:              (Alias)(o),
 	})
 }
 

@@ -8,14 +8,15 @@ export interface CreateStockModel {
 }
 
 export interface StockOverview extends CreateStockModel {
-  dividendYield: number;
   averagePrice: number;
   totalUnit: number;
-  profitLostPercentage: number;
-  realizedGainLoss: number;
+  realizedGainLoss: number | null;
   unrealizedGainLoss: number;
-  annualizedReturn: number;
+  annualizedReturn: number | null;
   dividendPayback: number;
+  dividendYield: number | null;
+  totalDividend: number | null;
+  roi: number | null;
 }
 
 export interface StockTxn {

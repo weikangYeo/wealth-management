@@ -114,6 +114,7 @@ DBPASS=<replace with your password>
     - [ ] Expose MCP, let Claude Client connect and handle, so the agent part (RAG, web search etc) happen in Claude
       side.
 - [ ] Tech Debts
+    - [ ] Fix KLCI Index Funds income dist and price.
     - [ ] Makefile
     - [ ] Stock - In dividend in spices case, make cost become non 0 by contra the original stock and dividend stock (e.g. stock A get "dividend" and calculate the cash value of it, stock B manual insert a "buy" txn to have cost)
     - [X] Setup DB and schema migration (golang-migrate/migrate or Goose or GORM)
