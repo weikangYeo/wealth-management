@@ -1,9 +1,9 @@
 package stock
 
 import (
+	"log"
 	"testing"
 	"time"
-	"wealth-management/internal/platform/decimal"
 
 	"github.com/cockroachdb/apd/v3"
 )
@@ -68,7 +68,7 @@ func TestComputeOverview(t *testing.T) {
 			Unit:        *toDecimal("200"),
 			UnitPrice:   *toDecimal("8"),
 			BrokerFee:   *toDecimal("20"),
-			TotalAmount: *toDecimal("1,580"),
+			TotalAmount: *toDecimal("1580"),
 			TxnType:     "SELL",
 		},
 	}
@@ -117,62 +117,209 @@ func TestComputeOverview(t *testing.T) {
 }
 
 func TestGetDividendPayback(t *testing.T) {
-	position := Position{
-		unit:          *toDecimal("100"),
-		cost:          *toDecimal("1000"),
-		totalInvested: *toDecimal("1000"),
-		realizedGain:  apd.Decimal{},
+	tests := []struct {
+		name          string
+		givenPosition Position
+		givenTotalDiv *apd.Decimal
+		expected      *apd.Decimal
+	}{
+		{
+			name: "holding, dividends divided by total invested",
+			givenPosition: Position{
+				unit:          *toDecimal("100"),
+				cost:          *toDecimal("1000"),
+				totalInvested: *toDecimal("1000"),
+			},
+			givenTotalDiv: toDecimal("100"),
+			expected:      toDecimal("0.1"),
+		},
+		{
+			// cost (500) shrank after the sell; dividing by it would give 0.2
+			name: "after partial sell, divides by total invested, not remaining cost",
+			givenPosition: Position{
+				unit:          *toDecimal("50"),
+				cost:          *toDecimal("500"),
+				totalInvested: *toDecimal("1000"),
+			},
+			givenTotalDiv: toDecimal("100"),
+			expected:      toDecimal("0.1"),
+		},
+		{
+			name: "fully sold, still computed from total invested",
+			givenPosition: Position{
+				totalInvested: *toDecimal("1000"),
+			},
+			givenTotalDiv: toDecimal("250"),
+			expected:      toDecimal("0.25"),
+		},
+		{
+			// e.g. dividend in specie received at 0 cost; current behaviour returns 0
+			name:          "nothing invested, returns nil",
+			givenPosition: Position{},
+			givenTotalDiv: toDecimal("100"),
+			expected:      nil,
+		},
 	}
-	totalDiv := toDecimal("100")
-	result, err := getDividendPayback(position, totalDiv)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expected := toDecimal("0.1")
-	if result.Cmp(expected) != 0 {
-		t.Fatalf("want %v, got %v", expected, result)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getDividendPayback(tt.givenPosition, tt.givenTotalDiv)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertDecimal(t, tt.expected, result)
+		})
 	}
 }
 
 func TestGetUnrealizedGainLoss(t *testing.T) {
-	position := Position{
-		unit:         *toDecimal("200"),
-		cost:         *toDecimal("1794"),
-		realizedGain: apd.Decimal{},
+	tests := []struct {
+		name               string
+		givenPosition      Position
+		givenLastDonePrice *apd.Decimal
+		expected           *apd.Decimal
+	}{
+		{
+			name: "happy scenario, with last done price present, expected a result",
+			givenPosition: Position{
+				unit:         *toDecimal("200"),
+				cost:         *toDecimal("1794"),
+				realizedGain: apd.Decimal{},
+			},
+			givenLastDonePrice: toDecimal("10.120"),
+			expected:           toDecimal("230.00"),
+		},
+		{
+			name: "no last done price, return nil",
+			givenPosition: Position{
+				unit:         *toDecimal("200"),
+				cost:         *toDecimal("1794"),
+				realizedGain: apd.Decimal{},
+			},
+			givenLastDonePrice: nil,
+			expected:           nil,
+		},
 	}
-	lastDonePrice := toDecimal("10.120")
-	result, err := position.getUnrealizedGainLoss(lastDonePrice)
-	if err != nil {
-		t.Fatal(err)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := tt.givenPosition.getUnrealizedGainLoss(tt.givenLastDonePrice)
+			if err != nil {
+				t.Fatal(err)
+			}
+			expected := tt.expected
+			if expected != nil {
+				if result.Cmp(expected) != 0 {
+					t.Fatalf("want %v, got %v", expected, result)
+				}
+			} else {
+				if result != nil {
+					t.Fatalf("want nil, got %v", result)
+				}
+			}
+
+		})
 	}
-	expected := toDecimal("230.00")
-	if result.Cmp(expected) != 0 {
-		t.Fatalf("want %v, got %v", expected, result)
-	}
+
 }
 
 func TestGetRoi(t *testing.T) {
-	position := Position{
-		unit:          *toDecimal("200"),
-		cost:          *toDecimal("1794"),
-		totalInvested: *toDecimal("1794"),
-		realizedGain:  *toDecimal("2000"),
+	tests := []struct {
+		name               string
+		givenPosition      Position
+		givenUnrealizedGL  *apd.Decimal
+		givenTotalDividend *apd.Decimal
+		expected           *apd.Decimal
+	}{
+		{
+			// (230 + 2000 + 200) / 1794
+			name: "holding with realized gain and dividends",
+			givenPosition: Position{
+				unit:          *toDecimal("200"),
+				cost:          *toDecimal("1794"),
+				totalInvested: *toDecimal("1794"),
+				realizedGain:  *toDecimal("2000"),
+			},
+			givenUnrealizedGL:  toDecimal("230.00"),
+			givenTotalDividend: toDecimal("200"),
+			expected:           toDecimal("1.3545150501672"),
+		},
+		{
+			// buy 1000 @ 2.00, buy 1000 @ 3.00, sell 500 @ 4.00, price now 3.00:
+			// unrealized = 1500 × 3 − 3765 = 735, realized = 735, (735 + 735) / 5000.
+			// dividing by remaining cost (3765) would give 0.39043824701195
+			name: "after partial sell, divides by total invested, not remaining cost",
+			givenPosition: Position{
+				unit:          *toDecimal("1500"),
+				cost:          *toDecimal("3765"),
+				totalInvested: *toDecimal("5000"),
+				realizedGain:  *toDecimal("735"),
+			},
+			givenUnrealizedGL:  toDecimal("735"),
+			givenTotalDividend: toDecimal("0"),
+			expected:           toDecimal("0.294"),
+		},
+		{
+			// (0 + 200 + 50) / 1000
+			name: "fully sold, unrealized is 0 and roi is still computed",
+			givenPosition: Position{
+				totalInvested: *toDecimal("1000"),
+				realizedGain:  *toDecimal("200"),
+			},
+			givenUnrealizedGL:  toDecimal("0"),
+			givenTotalDividend: toDecimal("50"),
+			expected:           toDecimal("0.25"),
+		},
+		{
+			name: "no unrealized gain loss (no last done price), return nil",
+			givenPosition: Position{
+				unit:          *toDecimal("200"),
+				cost:          *toDecimal("1794"),
+				totalInvested: *toDecimal("1794"),
+			},
+			givenUnrealizedGL:  nil,
+			givenTotalDividend: toDecimal("200"),
+			expected:           nil,
+		},
+		{
+			name:               "nothing invested, return nil",
+			givenPosition:      Position{},
+			givenUnrealizedGL:  toDecimal("0"),
+			givenTotalDividend: toDecimal("100"),
+			expected:           nil,
+		},
 	}
-	totalDividend := toDecimal("200")
-	result, err := position.getRoi(toDecimal("230.00"), *totalDividend)
-	if err != nil {
-		t.Fatal(err)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := tt.givenPosition.getRoi(tt.givenUnrealizedGL, *tt.givenTotalDividend)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertDecimal(t, tt.expected, result)
+		})
 	}
-	expected := toDecimal("1.3545150501672")
-	if result.Cmp(expected) != 0 {
-		t.Fatalf("want %v, got %v", expected, result)
+}
+
+// assertDecimal fails the test unless got and want are both nil, or both non-nil and numerically equal.
+func assertDecimal(t *testing.T, want, got *apd.Decimal) {
+	t.Helper()
+	switch {
+	case want == nil && got == nil:
+		return
+	case want == nil:
+		t.Fatalf("want nil, got %v", got)
+	case got == nil:
+		t.Fatalf("want %v, got nil", want)
+	case got.Cmp(want) != 0:
+		t.Fatalf("want %v, got %v", want, got)
 	}
 }
 
 func toDecimal(str string) *apd.Decimal {
-	d, err := decimal.ToDecimal(str)
+	d, _, err := apd.NewFromString(str)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return d
 }

@@ -167,12 +167,14 @@ func npv(cashFlows []CashFlow, rate float64) float64 {
 }
 
 func getDividendPayback(position Position, totalDiv *apd.Decimal) (*apd.Decimal, error) {
+	if position.totalInvested.IsZero() {
+		// return nil since all sold out, show N/A in FE
+		return nil, nil
+	}
 	dividendPayback := new(apd.Decimal)
-	if !position.totalInvested.IsZero() {
-		decimalCtx := apd.BaseContext.WithPrecision(14)
-		if _, err := decimalCtx.Quo(dividendPayback, totalDiv, &position.totalInvested); err != nil {
-			return nil, err
-		}
+	decimalCtx := apd.BaseContext.WithPrecision(14)
+	if _, err := decimalCtx.Quo(dividendPayback, totalDiv, &position.totalInvested); err != nil {
+		return nil, err
 	}
 	return dividendPayback, nil
 }

@@ -141,6 +141,7 @@ DBPASS=<replace with your password>
 ### Next todo
 - Setup stock aggregate info, in /overviews API and get stock details API, and FE show it
     - [ ] Annualized return
+      - [ ] Unit Test
 - [ ] AI Integration - Profolio API
 - [ ] What questions I want AI to answer, it influences I should prioritize MCP or integrate with Ollama
   - Next investment focus/next allocation
