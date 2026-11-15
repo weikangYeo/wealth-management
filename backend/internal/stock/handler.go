@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/cockroachdb/apd/v3"
 	"github.com/gin-gonic/gin"
@@ -62,8 +63,11 @@ func (handler *handler) getAllStock(context *gin.Context) {
 	for _, s := range stocks {
 		stockTxn := txnByStockName[s.StockName]
 		stockDiv := divByStockName[s.StockName]
-		lastDonePrice := priceByStockName[s.StockName]
-		overview, err := computeOverview(s, stockTxn, stockDiv, lastDonePrice)
+		var price *apd.Decimal
+		if val, ok := priceByStockName[s.StockName]; ok {
+			price = &val
+		}
+		overview, err := computeOverview(s, stockTxn, stockDiv, price, time.Now())
 		if err != nil {
 			log.Printf("Error compute overview: %v", err)
 			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -101,10 +105,8 @@ func (handler *handler) getStock(context *gin.Context) {
 			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		// default to 0 if not scraped
-		lastDonePrice = apd.Decimal{}
 	}
-	overview, err := computeOverview(stock, txns, dividends, lastDonePrice)
+	overview, err := computeOverview(stock, txns, dividends, lastDonePrice, time.Now())
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

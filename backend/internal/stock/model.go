@@ -64,23 +64,32 @@ type Price struct {
 }
 
 type Overview struct {
-	StockName          string      `json:"stockName"`
-	DisplayName        string      `json:"displayName"`
-	BursaStockId       string      `json:"bursaStockId"`
-	AveragePrice       apd.Decimal `json:"averagePrice"` // average price per stock unit (fee inclusive)
-	TotalUnit          apd.Decimal `json:"totalUnit"`
-	TotalDividend      apd.Decimal `json:"totalDividend"`
-	DividendPayback    apd.Decimal `json:"dividendPayback"`
-	RealizedGainLoss   apd.Decimal `json:"realizedGainLoss"`
-	UnrealizedGainLoss apd.Decimal `json:"unrealizedGainLoss"`
-	Roi                apd.Decimal `json:"roi"`
+	StockName          string       `json:"stockName"`
+	DisplayName        string       `json:"displayName"`
+	BursaStockId       string       `json:"bursaStockId"`
+	AveragePrice       apd.Decimal  `json:"averagePrice"` // average price per stock unit (fee inclusive)
+	TotalUnit          apd.Decimal  `json:"totalUnit"`
+	TotalDividend      apd.Decimal  `json:"totalDividend"`
+	DividendPayback    apd.Decimal  `json:"dividendPayback"`
+	RealizedGainLoss   apd.Decimal  `json:"realizedGainLoss"`
+	UnrealizedGainLoss *apd.Decimal `json:"unrealizedGainLoss"`
+	Roi                *apd.Decimal `json:"roi"`
+	AnnualizedReturn   *float64     `json:"annualizedReturn"`
 }
 
 // Position mean `holding` at a given/specific time in stock trading domain
 type Position struct {
-	unit         apd.Decimal
-	cost         apd.Decimal // how much cost I spent to hold this much of `unit` so far
-	realizedGain apd.Decimal
+	unit          apd.Decimal
+	cost          apd.Decimal // how much cost I spent to hold current holding so far
+	totalInvested apd.Decimal
+	realizedGain  apd.Decimal
+}
+
+// CashFlow used to calculate XIRR, positive value indicate money that come in (e.g. SELL, DIVIDEND), negative value indicate money that come out from pocket (e.g. BUY, fee)
+type CashFlow struct {
+	value float64
+	// using float because XIRR is just an estimation
+	yearFromFirstInvestment float64
 }
 
 // UnmarshalJSON Custom JSON unmarshaling for date parsing,
@@ -145,14 +154,13 @@ func (t *Txn) MarshalJSON() ([]byte, error) {
 func (o Overview) MarshalJSON() ([]byte, error) {
 	type Alias Overview
 	return json.Marshal(&struct {
-		AveragePrice       json.Number `json:"averagePrice"`
-		TotalUnit          json.Number `json:"totalUnit"`
-		TotalDividend      json.Number `json:"totalDividend"`
-		DividendPayback    json.Number `json:"dividendPayback"`
-		RealizedGainLoss   json.Number `json:"realizedGainLoss"`
-		UnrealizedGainLoss json.Number `json:"unrealizedGainLoss"`
-		Roi                json.Number `json:"roi"`
-
+		AveragePrice       json.Number  `json:"averagePrice"`
+		TotalUnit          json.Number  `json:"totalUnit"`
+		TotalDividend      json.Number  `json:"totalDividend"`
+		DividendPayback    json.Number  `json:"dividendPayback"`
+		RealizedGainLoss   json.Number  `json:"realizedGainLoss"`
+		UnrealizedGainLoss *json.Number `json:"unrealizedGainLoss"`
+		Roi                *json.Number `json:"roi"`
 		Alias
 	}{
 		AveragePrice:       json.Number(o.AveragePrice.String()),
@@ -160,8 +168,8 @@ func (o Overview) MarshalJSON() ([]byte, error) {
 		TotalDividend:      json.Number(o.TotalDividend.String()),
 		DividendPayback:    json.Number(o.DividendPayback.String()),
 		RealizedGainLoss:   json.Number(o.RealizedGainLoss.String()),
-		UnrealizedGainLoss: json.Number(o.UnrealizedGainLoss.String()),
-		Roi:                json.Number(o.Roi.String()),
+		UnrealizedGainLoss: toJsonDecimal(o.UnrealizedGainLoss),
+		Roi:                toJsonDecimal(o.Roi),
 		Alias:              (Alias)(o),
 	})
 }
@@ -223,6 +231,14 @@ func (dividend *Dividend) MarshalJSON() ([]byte, error) {
 		NetAmount:       json.Number(dividend.NetAmount.String()),
 		Alias:           (*Alias)(dividend),
 	})
+}
+
+func toJsonDecimal(decimal *apd.Decimal) *json.Number {
+	if decimal == nil {
+		return nil
+	}
+	n := json.Number(decimal.String())
+	return &n
 }
 
 // todo add test

@@ -68,7 +68,7 @@ func TestComputeOverview(t *testing.T) {
 			Unit:        *toDecimal("200"),
 			UnitPrice:   *toDecimal("8"),
 			BrokerFee:   *toDecimal("20"),
-			TotalAmount: *toDecimal("6245"),
+			TotalAmount: *toDecimal("1,580"),
 			TxnType:     "SELL",
 		},
 	}
@@ -96,7 +96,8 @@ func TestComputeOverview(t *testing.T) {
 		},
 	}
 	lastDonePrice := toDecimal("2.1")
-	result, err := computeOverview(mockStock, given, givenDividend, *lastDonePrice)
+	today := time.Date(2023, time.December, 1, 1, 0, 0, 0, time.UTC)
+	result, err := computeOverview(mockStock, given, givenDividend, lastDonePrice, today)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,16 +111,17 @@ func TestComputeOverview(t *testing.T) {
 	if result.RealizedGainLoss.Cmp(toDecimal("36.3636363636")) != 0 {
 		t.Fatalf("want %v, got %v", toDecimal("36.3636363636"), &result.RealizedGainLoss)
 	}
-	if result.DividendPayback.Cmp(toDecimal("0.20154430048423")) != 0 {
-		t.Fatalf("want %v, got %v", toDecimal("0.20154430048423"), &result.DividendPayback)
+	if result.DividendPayback.Cmp(toDecimal("0.16489988221437")) != 0 {
+		t.Fatalf("want %v, got %v", toDecimal("0.16489988221437"), &result.DividendPayback)
 	}
 }
 
 func TestGetDividendPayback(t *testing.T) {
 	position := Position{
-		unit:         *toDecimal("100"),
-		cost:         *toDecimal("1000"),
-		realizedGain: apd.Decimal{},
+		unit:          *toDecimal("100"),
+		cost:          *toDecimal("1000"),
+		totalInvested: *toDecimal("1000"),
+		realizedGain:  apd.Decimal{},
 	}
 	totalDiv := toDecimal("100")
 	result, err := getDividendPayback(position, totalDiv)
@@ -128,7 +130,7 @@ func TestGetDividendPayback(t *testing.T) {
 	}
 	expected := toDecimal("0.1")
 	if result.Cmp(expected) != 0 {
-		t.Fatalf("want %v, got %v", expected, &result)
+		t.Fatalf("want %v, got %v", expected, result)
 	}
 }
 
@@ -139,7 +141,7 @@ func TestGetUnrealizedGainLoss(t *testing.T) {
 		realizedGain: apd.Decimal{},
 	}
 	lastDonePrice := toDecimal("10.120")
-	result, err := position.getUnrealizedGainLoss(*lastDonePrice)
+	result, err := position.getUnrealizedGainLoss(lastDonePrice)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,12 +153,13 @@ func TestGetUnrealizedGainLoss(t *testing.T) {
 
 func TestGetRoi(t *testing.T) {
 	position := Position{
-		unit:         *toDecimal("200"),
-		cost:         *toDecimal("1794"),
-		realizedGain: *toDecimal("2000"),
+		unit:          *toDecimal("200"),
+		cost:          *toDecimal("1794"),
+		totalInvested: *toDecimal("1794"),
+		realizedGain:  *toDecimal("2000"),
 	}
 	totalDividend := toDecimal("200")
-	result, err := position.getRoi(*toDecimal("230.00"), *totalDividend)
+	result, err := position.getRoi(toDecimal("230.00"), *totalDividend)
 	if err != nil {
 		t.Fatal(err)
 	}

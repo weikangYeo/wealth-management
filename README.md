@@ -108,6 +108,8 @@ DBPASS=<replace with your password>
         - [ ] Import from Backup
 - [ ] Watch list
     - [ ] The ETL process of web scraped data and how to process it
+- [ ] Multi Profile
+  - [ ] can view as my/wife profile, or a consolidate view to see household financial position
 - [ ] AI Insight/AI suggestion, based on scrapped info, feed to LLM to provide suggestion
     - [ ] compare LLM rules and custom defined (by dev) rules
     - [ ] 2 ways to handle this at the moment, one use Ollama as model, then provide insight
@@ -138,14 +140,9 @@ DBPASS=<replace with your password>
 
 ### Next todo
 - Setup stock aggregate info, in /overviews API and get stock details API, and FE show it
-    - [ ] DY (on market)
-    - [ ] Dividend Yield on Cost
     - [ ] Annualized return
-    - [ ] in listing, just list % allocation of each stock would do, details need to navigate in
-    - [ ] show in FE
-- Show aggregate info in stock detail page
 - [ ] AI Integration - Profolio API
-- [ ] What questions I want AI to answer, it influence I should priotize MCP or integrate with Ollama
+- [ ] What questions I want AI to answer, it influences I should prioritize MCP or integrate with Ollama
   - Next investment focus/next allocation
   - Monthly investment adjustment?
   - Can it relate with Global news? to suggest the possible impact
