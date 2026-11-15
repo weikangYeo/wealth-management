@@ -2,6 +2,7 @@ package stock
 
 import (
 	"log"
+	"math"
 	"testing"
 	"time"
 
@@ -299,6 +300,104 @@ func TestGetRoi(t *testing.T) {
 			assertDecimal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestAnnualizedReturn(t *testing.T) {
+	tests := []struct {
+		name         string
+		txns         []Txn
+		dividends    []Dividend
+		holding      float64
+		today        time.Time
+		expectedRate *float64
+	}{
+		{
+			// real MAYBANK history: 2 buys, 18 dividends (RM 919 total), 200 units valued at an assumed RM 10.00.
+			// expected cross-checked independently (same bisection, Python): see docs/npv-and-xirr.md worked example
+			name: "happy case, maybank held since 2018 with dividends",
+			txns: []Txn{
+				{StockName: "MAYBANK", TxnDate: ymd(2018, time.January, 1), Unit: *toDecimal("100"), UnitPrice: *toDecimal("9.83"), BrokerFee: *toDecimal("0"), TotalAmount: *toDecimal("983"), TxnType: "BUY"},
+				{StockName: "MAYBANK", TxnDate: ymd(2020, time.April, 11), Unit: *toDecimal("100"), UnitPrice: *toDecimal("8.11"), BrokerFee: *toDecimal("0"), TotalAmount: *toDecimal("811"), TxnType: "BUY"},
+			},
+			dividends: []Dividend{
+				maybankDividend(ymd(2018, time.June, 5), ymd(2018, time.July, 6), "100", "0.32", "32"),
+				maybankDividend(ymd(2018, time.September, 28), ymd(2018, time.October, 30), "100", "0.25", "25"),
+				maybankDividend(ymd(2019, time.May, 7), ymd(2019, time.June, 7), "100", "0.32", "32"),
+				maybankDividend(ymd(2019, time.September, 18), ymd(2019, time.October, 2), "100", "0.25", "25"),
+				maybankDividend(ymd(2020, time.April, 10), ymd(2020, time.May, 6), "100", "0.39", "39"),
+				maybankDividend(ymd(2020, time.December, 17), ymd(2021, time.January, 15), "200", "0.135", "27"),
+				maybankDividend(ymd(2021, time.May, 28), ymd(2021, time.June, 28), "200", "0.385", "77"),
+				maybankDividend(ymd(2021, time.September, 22), ymd(2021, time.October, 21), "200", "0.28", "56"),
+				maybankDividend(ymd(2022, time.March, 16), ymd(2022, time.April, 14), "200", "0.30", "60"),
+				maybankDividend(ymd(2022, time.September, 19), ymd(2022, time.October, 19), "200", "0.28", "56"),
+				maybankDividend(ymd(2023, time.March, 13), ymd(2023, time.March, 24), "200", "0.30", "60"),
+				maybankDividend(ymd(2023, time.September, 14), ymd(2023, time.September, 27), "200", "0.29", "58"),
+				maybankDividend(ymd(2024, time.March, 13), ymd(2024, time.March, 26), "200", "0.31", "62"),
+				maybankDividend(ymd(2024, time.September, 11), ymd(2024, time.September, 26), "200", "0.29", "58"),
+				maybankDividend(ymd(2025, time.March, 12), ymd(2025, time.March, 26), "200", "0.32", "64"),
+				maybankDividend(ymd(2025, time.September, 11), ymd(2025, time.September, 26), "200", "0.30", "60"),
+				maybankDividend(ymd(2026, time.March, 12), ymd(2026, time.March, 26), "200", "0.33", "66"),
+				maybankDividend(ymd(2026, time.September, 23), ymd(2026, time.October, 22), "200", "0.31", "62"),
+			},
+			holding:      2000, // 200 units × RM 10.00 (assumed last done price)
+			today:        ymd(2026, time.November, 8),
+			expectedRate: toFloatPtr(0.0774893),
+		},
+		{
+			// real MAYBANK history: 2 buys, 18 dividends (RM 919 total), 200 units valued at an assumed RM 10.00.
+			// expected cross-checked independently (same bisection, Python): see docs/npv-and-xirr.md worked example
+			name: "Holding less than a year",
+			txns: []Txn{
+				{StockName: "MAYBANK", TxnDate: ymd(2018, time.January, 1), Unit: *toDecimal("100"), UnitPrice: *toDecimal("9.83"), BrokerFee: *toDecimal("0"), TotalAmount: *toDecimal("983"), TxnType: "BUY"},
+			},
+			dividends:    []Dividend{},
+			holding:      1000,
+			today:        ymd(2018, time.February, 8),
+			expectedRate: nil,
+		},
+	}
+
+	// bisection stops once the search range is narrower than 1e-7, so compare floats within a tolerance, never with ==
+	const tolerance = 1e-6
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := getAnnualizedReturn(tt.txns, tt.dividends, tt.holding, tt.today)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tt.expectedRate != nil {
+				if math.Abs(*result-*tt.expectedRate) > tolerance {
+					t.Fatalf("want %v (±%v), got %v", tt.expectedRate, tolerance, *result)
+				}
+			} else {
+				if result != nil {
+					t.Fatalf("expected nil, got %v", *result)
+				}
+			}
+		})
+	}
+}
+
+func ymd(year int, month time.Month, day int) time.Time {
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+}
+
+// maybankDividend builds a tax-free (single-tier) dividend row, so gross == net.
+func maybankDividend(exDate, paymentDate time.Time, unit, perUnit, amount string) Dividend {
+	return Dividend{
+		StockName:       "MAYBANK",
+		ExDate:          exDate,
+		PaymentDate:     paymentDate,
+		StockUnit:       *toDecimal(unit),
+		DividendPerUnit: *toDecimal(perUnit),
+		TaxPercentage:   *toDecimal("0"),
+		GrossAmount:     *toDecimal(amount),
+		NetAmount:       *toDecimal(amount),
+	}
+}
+
+func toFloatPtr(f float64) *float64 {
+	return &f
 }
 
 // assertDecimal fails the test unless got and want are both nil, or both non-nil and numerically equal.
