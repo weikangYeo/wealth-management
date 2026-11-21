@@ -63,7 +63,7 @@ func computeOverview(stock Stock, txns []Txn, dividends []Dividend, lastDonePric
 		TotalDividend:      *totalDiv,
 		AveragePrice:       averageCost,
 		TotalUnit:          position.unit,
-		DividendPayback:    *dividendPayback,
+		DividendPayback:    dividendPayback,
 		RealizedGainLoss:   position.realizedGain,
 		UnrealizedGainLoss: unrealizedGainLoss,
 		Roi:                roi,

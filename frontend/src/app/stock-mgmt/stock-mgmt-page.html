@@ -114,9 +114,15 @@
                     }
                   </td>
                   <td class="px-4 py-4 text-right">
-                    <span class="bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    @if (stock.dividendPayback != null) {
+                      <span class="bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-semibold px-2 py-0.5 rounded-full">
                       {{ stock.dividendPayback | percent:'1.2-2' }}
                     </span>
+                    } @else {
+                      <span class="text-xs font-semibold text-rose-400">
+                        N/A
+                      </span>
+                    }
                   </td>
                   <td class="px-4 py-4 text-right">
                     <span class="text-xs text-indigo-400 font-semibold whitespace-nowrap">Details →</span>

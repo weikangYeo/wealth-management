@@ -70,7 +70,7 @@ type Overview struct {
 	AveragePrice       apd.Decimal  `json:"averagePrice"` // average price per stock unit (fee inclusive)
 	TotalUnit          apd.Decimal  `json:"totalUnit"`
 	TotalDividend      apd.Decimal  `json:"totalDividend"`
-	DividendPayback    apd.Decimal  `json:"dividendPayback"`
+	DividendPayback    *apd.Decimal `json:"dividendPayback"`
 	RealizedGainLoss   apd.Decimal  `json:"realizedGainLoss"`
 	UnrealizedGainLoss *apd.Decimal `json:"unrealizedGainLoss"`
 	Roi                *apd.Decimal `json:"roi"`
@@ -157,7 +157,7 @@ func (o Overview) MarshalJSON() ([]byte, error) {
 		AveragePrice       json.Number  `json:"averagePrice"`
 		TotalUnit          json.Number  `json:"totalUnit"`
 		TotalDividend      json.Number  `json:"totalDividend"`
-		DividendPayback    json.Number  `json:"dividendPayback"`
+		DividendPayback    *json.Number `json:"dividendPayback"`
 		RealizedGainLoss   json.Number  `json:"realizedGainLoss"`
 		UnrealizedGainLoss *json.Number `json:"unrealizedGainLoss"`
 		Roi                *json.Number `json:"roi"`
@@ -166,7 +166,7 @@ func (o Overview) MarshalJSON() ([]byte, error) {
 		AveragePrice:       json.Number(o.AveragePrice.String()),
 		TotalUnit:          json.Number(o.TotalUnit.String()),
 		TotalDividend:      json.Number(o.TotalDividend.String()),
-		DividendPayback:    json.Number(o.DividendPayback.String()),
+		DividendPayback:    toJsonDecimal(o.DividendPayback),
 		RealizedGainLoss:   json.Number(o.RealizedGainLoss.String()),
 		UnrealizedGainLoss: toJsonDecimal(o.UnrealizedGainLoss),
 		Roi:                toJsonDecimal(o.Roi),
